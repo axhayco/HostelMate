@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import logo from "@/assets/logo.png";
 import SplashScreen from "@/components/SplashScreen";
 import LoginPage from "@/components/LoginPage";
@@ -19,6 +19,24 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { HostelProvider } from "@/context/HostelContext";
 import { AgentControlPlane } from "@/components/AgentControlPlane";
+
+// ── Per-owner hostel persistence ──────────────────────────────────────────────
+// Owner hostels are stored separately, keyed by ownerId, so no owner ever
+// sees or touches another owner's data.
+function ownerKey(ownerId: string) {
+  return `hostelmate-owner-hostels-${ownerId}`;
+}
+function loadOwnerHostels(ownerId: string): Hostel[] {
+  try {
+    const raw = localStorage.getItem(ownerKey(ownerId));
+    return raw ? (JSON.parse(raw) as Hostel[]) : [];
+  } catch {
+    return [];
+  }
+}
+function saveOwnerHostels(ownerId: string, hostels: Hostel[]) {
+  localStorage.setItem(ownerKey(ownerId), JSON.stringify(hostels));
+}
 
 type Page =
   | "splash" | "role-select"
@@ -42,15 +60,51 @@ const Index = () => {
     return "splash";
   });
   const [selectedHostel, setSelectedHostel] = useState<Hostel | null>(null);
-  const [hostels, setHostels] = useState<Hostel[]>(() => {
-    try {
-      const saved = localStorage.getItem("hostelmate-hostels");
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
+
+  // Owner's own hostels — loaded lazily when user is known, keyed by ownerId.
+  // This is the SOURCE OF TRUTH for the owner dashboard.
+  const [ownerHostels, setOwnerHostelsState] = useState<Hostel[]>([]);
+
+  // Load owner hostels from storage whenever the authenticated user changes
+  useEffect(() => {
+    if (user?.id) {
+      setOwnerHostelsState(loadOwnerHostels(user.id));
+    } else {
+      setOwnerHostelsState([]);
     }
-    return mockHostels;
-  });
+  }, [user?.id]);
+
+  // Persist owner hostels whenever they change
+  useEffect(() => {
+    if (user?.id) {
+      saveOwnerHostels(user.id, ownerHostels);
+    }
+  }, [user?.id, ownerHostels]);
+
+  // Callback for OwnerPage — only mutates this owner's slice
+  const handleOwnerHostelsChange = useCallback((updated: Hostel[]) => {
+    setOwnerHostelsState(updated);
+  }, []);
+
+  // Merged view for students: mock hostels + all owner-added listings.
+  // We collect all owner-added hostels from localStorage keys so students
+  // can browse every owner's listed hostels, but owners cannot see each other's dashboards.
+  const hostels = useMemo<Hostel[]>(() => {
+    // Gather all owner-added hostels from every key in localStorage
+    const allOwnerAdded: Hostel[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("hostelmate-owner-hostels-")) {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(k) || "[]") as Hostel[];
+          allOwnerAdded.push(...parsed);
+        } catch { /* ignore corrupt entries */ }
+      }
+    }
+    return [...mockHostels, ...allOwnerAdded];
+  // Re-derive whenever ownerHostels changes so new listings appear immediately
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ownerHostels]);
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     return (sessionStorage.getItem("hostelmate-current-tab") as Tab) || "explore";
   });
@@ -69,10 +123,6 @@ const Index = () => {
       sessionStorage.setItem("hostelmate-current-page", page);
     }
   }, [page]);
-
-  useEffect(() => {
-    localStorage.setItem("hostelmate-hostels", JSON.stringify(hostels));
-  }, [hostels]);
 
   useEffect(() => {
     sessionStorage.setItem("hostelmate-current-tab", activeTab);
@@ -244,6 +294,7 @@ const Index = () => {
           onSelect={(role) =>
             setPage(role === "student" ? "login-student" : "login-owner")
           }
+          onBack={() => setPage("student")}
         />
       );
 
@@ -252,6 +303,7 @@ const Index = () => {
         <LoginPage
           role="student"
           onLogin={() => handleLoginSuccess("student")}
+          onBack={() => setPage("role-select")}
         />
       );
 
@@ -260,6 +312,7 @@ const Index = () => {
         <LoginPage
           role="owner"
           onLogin={() => handleLoginSuccess("owner")}
+          onBack={() => setPage("role-select")}
         />
       );
 
@@ -279,8 +332,9 @@ const Index = () => {
     case "owner":
       return wrap(
         <OwnerPage
-          hostels={hostels}
-          onHostelsChange={setHostels}
+          // Only the current owner's own hostels — strictly isolated
+          hostels={ownerHostels}
+          onHostelsChange={handleOwnerHostelsChange}
           onBack={handleSignOut}
           ownerId={user?.id ?? "unknown"}
         />

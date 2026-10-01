@@ -1,4 +1,5 @@
 import { CalendarDays, MapPin } from "lucide-react";
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 
 interface Booking {
   id: string;
@@ -43,7 +44,12 @@ const TripsPage = ({ bookings, onEditBooking, onCancelBooking }: TripsPageProps)
           <div className="space-y-4">
             {bookings.map((b) => (
               <div key={b.id} className="flex gap-4 rounded-2xl bg-card p-4 shadow-card transition-all hover:shadow-card-hover">
-                <img src={b.image} alt={b.hostelName} className="h-20 w-20 rounded-xl object-cover flex-shrink-0" />
+                <img
+                  src={b.image || DEFAULT_HOSTEL_IMAGE}
+                  alt={b.hostelName}
+                  onError={handleImageError}
+                  className="h-20 w-20 rounded-xl object-cover flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-foreground truncate">{b.hostelName}</h3>
                   <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">

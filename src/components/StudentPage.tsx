@@ -1,5 +1,6 @@
 import { Hostel } from "@/data/hostels";
 import { useState, useMemo } from "react";
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { Search, Heart, ChevronDown, ChevronRight, Star, LayoutGrid, Map, MessageCircle, Zap } from "lucide-react";
 import HostelCard from "./HostelCard";
 import HostelMap from "./HostelMap";
@@ -50,8 +51,9 @@ function ScrollCard({
       <div className="cursor-pointer" onClick={onSelect}>
         <div className="relative aspect-square overflow-hidden rounded-xl">
           <img
-            src={hostel.image}
+            src={hostel.image || DEFAULT_HOSTEL_IMAGE}
             alt={hostel.name}
+            onError={handleImageError}
             className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
           />
           {isLow && (

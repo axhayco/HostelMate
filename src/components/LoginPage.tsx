@@ -6,7 +6,7 @@ import logo from "@/assets/logo.png";
 import { useState } from "react";
 import {
   Mail, Phone, ArrowRight, Lock, Eye, EyeOff,
-  AlertCircle, Hash, User,
+  AlertCircle, Hash, User, ArrowLeft,
 } from "lucide-react";
 import { useAuth, type UserRole } from "@/context/AuthContext";
 import { authLimiter, otpResendLimiter } from "@/lib/rateLimiter";
@@ -18,12 +18,13 @@ type PhoneStep = "input" | "otp";
 interface LoginPageProps {
   onLogin: () => void;
   role: UserRole;
+  onBack?: () => void;
 }
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/;
 
-const LoginPage = ({ onLogin, role }: LoginPageProps) => {
+const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
   const { signInWithEmail, signUpWithEmail, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<AuthMode>("email");
@@ -180,7 +181,16 @@ const LoginPage = ({ onLogin, role }: LoginPageProps) => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pt-12">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-6 left-6 flex items-center gap-2 rounded-xl bg-secondary/80 px-3.5 py-2 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95 shadow-sm"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back</span>
+        </button>
+      )}
       <div className="w-full max-w-sm animate-fade-up" style={{ animationFillMode: "both" }}>
 
         {/* Logo + Title */}

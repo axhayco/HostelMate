@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Camera, User, Mail, Phone, MapPin, Save, Check, HelpCircle, PhoneCall, LogOut, LogIn } from "lucide-react";
+import { DEFAULT_AVATAR_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { profileSchema, validateField, sanitizeText } from "@/lib/validation";
@@ -158,7 +159,12 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
         <div className="flex flex-col items-center">
           <div className="relative">
             {profile.avatar ? (
-              <img src={profile.avatar} alt="avatar" className="h-24 w-24 rounded-full object-cover" />
+              <img
+                src={profile.avatar}
+                alt="avatar"
+                onError={(e) => handleImageError(e, DEFAULT_AVATAR_IMAGE)}
+                className="h-24 w-24 rounded-full object-cover"
+              />
             ) : (
               <div className="flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <User className="h-10 w-10" />

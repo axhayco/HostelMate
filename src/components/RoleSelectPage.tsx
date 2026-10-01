@@ -1,13 +1,23 @@
 import logo from "@/assets/logo.png";
-import { GraduationCap, Building2 } from "lucide-react";
+import { GraduationCap, Building2, ArrowLeft } from "lucide-react";
 
 interface RoleSelectPageProps {
   onSelect: (role: "student" | "owner") => void;
+  onBack?: () => void;
 }
 
-const RoleSelectPage = ({ onSelect }: RoleSelectPageProps) => {
+const RoleSelectPage = ({ onSelect, onBack }: RoleSelectPageProps) => {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pt-12">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="absolute top-6 left-6 flex items-center gap-2 rounded-xl bg-secondary/80 px-3.5 py-2 text-sm font-semibold text-foreground transition-all hover:bg-secondary active:scale-95 shadow-sm"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back</span>
+        </button>
+      )}
       <div className="w-full max-w-sm animate-fade-up" style={{ animationFillMode: "both" }}>
         <div className="mb-8 flex flex-col items-center">
           <img src={logo} alt="HostelMate" className="mb-4 h-20 w-20" />

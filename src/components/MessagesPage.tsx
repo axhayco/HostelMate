@@ -1,5 +1,6 @@
 import { MessageCircle } from "lucide-react";
 import { Hostel } from "@/data/hostels";
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 
 interface MessagesPageProps {
   hostels: Hostel[];
@@ -35,7 +36,12 @@ const MessagesPage = ({ hostels, favorites, onOpenChat }: MessagesPageProps) => 
                 onClick={() => onOpenChat(h)}
                 className="flex w-full items-center gap-3.5 rounded-2xl bg-card p-4 shadow-card transition-all hover:shadow-card-hover text-left"
               >
-                <img src={h.image} alt={h.name} className="h-12 w-12 rounded-xl object-cover flex-shrink-0" />
+                <img
+                  src={h.image || DEFAULT_HOSTEL_IMAGE}
+                  alt={h.name}
+                  onError={handleImageError}
+                  className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
+                />
                 <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-foreground truncate">{h.name}</h3>
                   <p className="text-xs text-muted-foreground truncate">Tap to open community chat</p>

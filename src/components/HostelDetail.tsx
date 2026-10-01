@@ -1,5 +1,6 @@
 import { Hostel } from "@/data/hostels";
 import { useState, useEffect, useMemo } from "react";
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import {
   ArrowLeft, Star, MapPin, Phone, Wifi, Wind, Utensils, Dumbbell,
   ShieldCheck, Car, Zap, Droplets, BookOpen, Home, Sparkles, Sun,
@@ -152,13 +153,14 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
         <div className="mb-4">
           <div className="aspect-[16/9] overflow-hidden rounded-2xl">
             <img
-              src={hostel.photos[activePhoto] || hostel.image}
+              src={hostel.photos?.[activePhoto] || hostel.image || DEFAULT_HOSTEL_IMAGE}
               alt={`${hostel.name} photo ${activePhoto + 1}`}
+              onError={handleImageError}
               className="h-full w-full object-cover transition-all duration-500"
             />
           </div>
           <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {hostel.photos.map((photo, i) => (
+            {(hostel.photos?.length ? hostel.photos : [hostel.image || DEFAULT_HOSTEL_IMAGE]).map((photo, i) => (
               <button
                 key={i}
                 onClick={() => setActivePhoto(i)}
@@ -169,8 +171,9 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
                 }`}
               >
                 <img
-                  src={photo}
+                  src={photo || DEFAULT_HOSTEL_IMAGE}
                   alt={`Thumbnail ${i + 1}`}
+                  onError={handleImageError}
                   className="h-16 w-20 object-cover"
                 />
               </button>

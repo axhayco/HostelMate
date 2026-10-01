@@ -1,6 +1,8 @@
 import { Hostel } from "@/data/hostels";
 import { MapPin, Star, Trash2, MessageCircle, Zap } from "lucide-react";
 
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
+
 interface HostelCardProps {
   hostel: Hostel;
   onDelete?: (id: string) => void;
@@ -37,8 +39,9 @@ const HostelCard = ({ hostel, onDelete, showDelete, onClick }: HostelCardProps) 
       {/* Image */}
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={hostel.image}
+          src={hostel.image || DEFAULT_HOSTEL_IMAGE}
           alt={hostel.name}
+          onError={handleImageError}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 

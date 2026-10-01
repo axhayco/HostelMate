@@ -1,5 +1,6 @@
 import { Hostel, mockHostels, ALL_AMENITIES } from "@/data/hostels";
 import { useState, useMemo, useEffect, useRef } from "react";
+import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import {
   ArrowLeft, Plus, X, Pencil, Trash2, Users, BedDouble,
   Building2, Eye, Check, MapPin, Star, Wifi, WifiOff, ImagePlus, Loader2,
@@ -57,8 +58,10 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
     onHostelsChange(next);
   };
 
-  // Filter hostels to only show ones owned by this owner
-  const myHostels = useMemo(() => hostels.filter((h) => h.ownerId === ownerId), [hostels, ownerId]);
+  // `hostels` already contains only this owner's listings (enforced by Index.tsx).
+  // No further filtering needed. We alias for readability.
+  const myHostels = hostels;
+
   const [modal, setModal] = useState<ModalMode>(null);
   const [form, setForm] = useState<HostelForm>(emptyForm);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -189,8 +192,8 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
           amenities: form.amenities,
           description: validData.description || "No description provided.",
           contactPhone: validData.contactPhone || "+91 00000 00000",
-          lat: 12.9716,
-          lng: 77.5946,
+          lat: 17.385,
+          lng: 78.4867,
         };
         if (editId) {
           setHostels(hostels.map((h) => (h.id === editId ? { ...h, ...hostelData } : h)));
@@ -214,6 +217,10 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
   };
 
   const handleDelete = (id: string) => {
+    // Safety guard: only delete hostels belonging to this owner
+    const target = hostels.find((h) => h.id === id);
+    if (!target) return;
+    if (!window.confirm(`Delete "${target.name}"? This cannot be undone.`)) return;
     setHostels(hostels.filter((h) => h.id !== id));
   };
 
@@ -285,12 +292,15 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
               <TrendingUp className="h-3 w-3" /> +12% from last month
             </div>
           </div>
-          <div className="h-64 w-full">
-            <ChartContainer config={{
-              revenue: { label: "Revenue", color: "hsl(var(--primary))" },
-              occupancy: { label: "Occupancy %", color: "hsl(var(--accent))" }
-            }}>
-              <AreaChart data={revenueData}>
+          <div className="h-52 w-full overflow-hidden">
+            <ChartContainer
+              className="h-full w-full aspect-auto"
+              config={{
+                revenue: { label: "Revenue", color: "hsl(var(--primary))" },
+                occupancy: { label: "Occupancy %", color: "hsl(var(--accent))" }
+              }}
+            >
+              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
@@ -324,105 +334,141 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
           </div>
         </section>
 
-        {/* Hostel List */}
-        <div className="space-y-3">
-          {myHostels.map((h) => {
-            const occupied = h.totalCapacity - h.vacancies;
-            const occupancyPct = h.totalCapacity ? Math.round((occupied / h.totalCapacity) * 100) : 0;
-            return (
-              <div key={h.id} className="rounded-2xl bg-card shadow-card overflow-hidden">
-                <div className="flex gap-3 p-3">
-                  <img src={h.image} alt={h.name} className="h-24 w-24 rounded-xl object-cover flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-semibold text-foreground truncate">{h.name}</h3>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
-                          <MapPin className="h-3 w-3 flex-shrink-0" /> <span className="truncate">{h.location}</span>
+        {/* ── MY HOSTELS SECTION ───────────────────────────────────────────── */}
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-bold text-foreground flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-primary" />
+              My Hostels
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                {myHostels.length}
+              </span>
+            </h2>
+            <button
+              onClick={openAdd}
+              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+            >
+              <Plus className="h-3.5 w-3.5" /> Add Hostel
+            </button>
+          </div>
+
+          {myHostels.length === 0 ? (
+            <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border py-12 text-center">
+              <Building2 className="mx-auto h-10 w-10 mb-3 text-muted-foreground/40" />
+              <p className="font-semibold text-foreground">No hostels added yet</p>
+              <p className="mt-1 text-sm text-muted-foreground">Tap "Add Hostel" to list your first property</p>
+              <button
+                onClick={openAdd}
+                className="mt-4 flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+              >
+                <Plus className="h-4 w-4" /> Add Your First Hostel
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {myHostels.map((h) => {
+                const occupied = h.totalCapacity - h.vacancies;
+                const occupancyPct = h.totalCapacity ? Math.round((occupied / h.totalCapacity) * 100) : 0;
+                return (
+                  <div key={h.id} className="rounded-2xl bg-card shadow-card overflow-hidden ring-1 ring-primary/15">
+                    <div className="flex gap-3 p-3">
+                      <img
+                        src={h.image || DEFAULT_HOSTEL_IMAGE}
+                        alt={h.name}
+                        onError={handleImageError}
+                        className="h-24 w-24 rounded-xl object-cover flex-shrink-0"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-semibold text-foreground truncate">{h.name}</h3>
+                              <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold text-primary tracking-wide">MINE</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground mt-0.5">
+                              <MapPin className="h-3 w-3 flex-shrink-0" /> <span className="truncate">{h.location}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs font-semibold">
+                            <Star className="h-3 w-3 fill-warning text-warning" /> {h.rating}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs font-semibold">
-                        <Star className="h-3 w-3 fill-warning text-warning" /> {h.rating}
+
+                        <div className="mt-2 flex items-center gap-3 text-xs">
+                          <span className="font-bold text-primary">₹{h.rent.toLocaleString()}<span className="font-normal text-muted-foreground">/mo</span></span>
+                          <span className="capitalize rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">{h.gender}</span>
+                        </div>
+
+                        {/* Smart Pricing Suggestion */}
+                        {h.totalCapacity > 0 && (
+                          <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/5 p-2 border border-primary/10">
+                            <IndianRupee className="h-3 w-3 text-primary" />
+                            <div className="flex-1">
+                              <p className="text-[10px] text-muted-foreground font-medium">Smart Pricing Suggestion</p>
+                              <p className="text-xs font-bold text-foreground">
+                                Suggest ₹{getSmartPrice(h).toLocaleString()}
+                                <span className={`ml-2 text-[10px] ${getSmartPrice(h) > h.rent ? "text-success" : getSmartPrice(h) < h.rent ? "text-destructive" : "text-muted-foreground"}`}>
+                                  ({getSmartPrice(h) > h.rent ? "+" : ""}{Math.round(((getSmartPrice(h) - h.rent) / h.rent) * 100)}%)
+                                </span>
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Mini occupancy bar */}
+                        <div className="mt-2">
+                          <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                            <span>{occupied}/{h.totalCapacity} occupied</span>
+                            <span className="font-semibold">{occupancyPct}%</span>
+                          </div>
+                          <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all ${occupancyPct >= 90 ? "bg-destructive" : occupancyPct >= 60 ? "bg-warning" : "bg-success"}`}
+                              style={{ width: `${occupancyPct}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="mt-2 flex items-center gap-3 text-xs">
-                      <span className="font-bold text-primary">₹{h.rent.toLocaleString()}<span className="font-normal text-muted-foreground">/mo</span></span>
-                      <span className="capitalize rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">{h.gender}</span>
-                    </div>
-
-                    {/* Smart Pricing Suggestion */}
-                    {h.totalCapacity > 0 && (
-                      <div className="mt-2 flex items-center gap-2 rounded-lg bg-primary/5 p-2 border border-primary/10">
-                        <IndianRupee className="h-3 w-3 text-primary" />
-                        <div className="flex-1">
-                          <p className="text-[10px] text-muted-foreground font-medium">Smart Pricing Suggestion</p>
-                          <p className="text-xs font-bold text-foreground">
-                            Suggest ₹{getSmartPrice(h).toLocaleString()}
-                            <span className={`ml-2 text-[10px] ${getSmartPrice(h) > h.rent ? "text-success" : getSmartPrice(h) < h.rent ? "text-destructive" : "text-muted-foreground"}`}>
-                              ({getSmartPrice(h) > h.rent ? "+" : ""}{Math.round(((getSmartPrice(h) - h.rent) / h.rent) * 100)}%)
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Mini occupancy bar */}
-                    <div className="mt-2">
-                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
-                        <span>{occupied}/{h.totalCapacity} occupied</span>
-                        <span className="font-semibold">{occupancyPct}%</span>
-                      </div>
-                      <div className="h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${occupancyPct >= 90 ? "bg-destructive" : occupancyPct >= 60 ? "bg-warning" : "bg-success"
-                            }`}
-                          style={{ width: `${occupancyPct}%` }}
-                        />
-                      </div>
+                    {/* Action buttons */}
+                    <div className="flex border-t border-border divide-x divide-border">
+                      <button
+                        onClick={() => openEdit(h)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Edit
+                      </button>
+                      <button
+                        onClick={() => openOccupancy(h)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
+                      >
+                        <Eye className="h-3.5 w-3.5" /> Occupancy
+                      </button>
+                      <button
+                        onClick={() => handleDelete(h.id)}
+                        className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex border-t border-border divide-x divide-border">
-                  <button
-                    onClick={() => openEdit(h)}
-                    className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-                  >
-                    <Pencil className="h-3.5 w-3.5" /> Edit
-                  </button>
-                  <button
-                    onClick={() => openOccupancy(h)}
-                    className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-foreground transition-colors hover:bg-secondary"
-                  >
-                    <Eye className="h-3.5 w-3.5" /> Occupancy
-                  </button>
-                  <button
-                    onClick={() => handleDelete(h.id)}
-                    className="flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" /> Delete
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {myHostels.length === 0 && (
-          <div className="py-20 text-center text-muted-foreground">
-            <Building2 className="mx-auto h-12 w-12 mb-3 opacity-40" />
-            <p className="text-lg font-medium">No hostels yet</p>
-            <p className="mt-1 text-sm">Tap + to add your first hostel</p>
-          </div>
-        )}
+
+        {/* Bottom padding for FAB */}
+        <div className="h-6" />
       </main>
 
-      {/* FAB */}
+      {/* FAB — Add Hostel */}
       <button
         onClick={openAdd}
         className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:scale-110 active:scale-95"
+        aria-label="Add hostel"
       >
         <Plus className="h-6 w-6" />
       </button>
@@ -449,7 +495,7 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-muted-foreground">Location</label>
-                <input type="text" placeholder="e.g. Koramangala, Bangalore" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} />
+                <input type="text" placeholder="e.g. Kukatpally, Hyderabad" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -464,8 +510,9 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
                       <button
                         key={g}
                         onClick={() => setForm({ ...form, gender: g })}
-                        className={`flex-1 rounded-xl py-2.5 text-xs font-semibold capitalize transition-all ${form.gender === g ? "bg-primary text-primary-foreground" : "border border-input bg-background text-foreground hover:bg-secondary"
-                          }`}
+                        className={`flex-1 rounded-xl py-2.5 text-xs font-semibold capitalize transition-all ${
+                          form.gender === g ? "bg-primary text-primary-foreground" : "border border-input bg-background text-foreground hover:bg-secondary"
+                        }`}
                       >
                         {g}
                       </button>
@@ -539,10 +586,11 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
                       <button
                         key={a}
                         onClick={() => toggleAmenity(a)}
-                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${active
-                          ? "bg-primary text-primary-foreground"
-                          : "border border-input bg-background text-foreground hover:bg-secondary"
-                          }`}
+                        className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                          active
+                            ? "bg-primary text-primary-foreground"
+                            : "border border-input bg-background text-foreground hover:bg-secondary"
+                        }`}
                       >
                         {active && <Check className="h-3 w-3" />}
                         {a}
