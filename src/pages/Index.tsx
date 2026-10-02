@@ -48,10 +48,22 @@ type Page =
 
 type Tab = "explore" | "wishlists" | "trips" | "messages" | "profile";
 
+// ── URL & Browser History Helper ──────────────────────────────────────────────
+function getUrlState() {
+  const params = new URLSearchParams(window.location.search);
+  const page = (params.get("page") as Page) || null;
+  const hostelId = params.get("id") || null;
+  const tab = (params.get("tab") as Tab) || null;
+  return { page, hostelId, tab };
+}
+
 const Index = () => {
   const { user, role, loading, signOut } = useAuth();
 
   const [page, setPage] = useState<Page>(() => {
+    const urlState = getUrlState();
+    if (urlState.page) return urlState.page;
+
     // 1. If splash seen, avoid initializing to it
     const splashSeen = sessionStorage.getItem("hostelmate-splash-seen") === "true";
     const savedPage = sessionStorage.getItem("hostelmate-current-page") as Page;
@@ -106,6 +118,8 @@ const Index = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ownerHostels]);
   const [activeTab, setActiveTab] = useState<Tab>(() => {
+    const urlState = getUrlState();
+    if (urlState.tab) return urlState.tab;
     return (sessionStorage.getItem("hostelmate-current-tab") as Tab) || "explore";
   });
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -116,6 +130,94 @@ const Index = () => {
     try { return JSON.parse(localStorage.getItem("hostelmate-bookings") || "[]"); }
     catch { return []; }
   });
+
+  // ── Browser History & URL Navigation Helper ──────────────────────────────
+  const navigateTo = useCallback(
+    (targetPage: Page, hostel?: Hostel | null, targetTab?: Tab, replace = false) => {
+      setPage(targetPage);
+      if (hostel !== undefined) setSelectedHostel(hostel ?? null);
+      if (targetTab) setActiveTab(targetTab);
+
+      const params = new URLSearchParams();
+      if (targetPage !== "student" || (targetTab && targetTab !== "explore")) {
+        params.set("page", targetPage);
+      }
+      if (hostel?.id) {
+        params.set("id", hostel.id);
+      }
+      if (targetTab && targetTab !== "explore") {
+        params.set("tab", targetTab);
+      }
+
+      const query = params.toString();
+      const url = query ? `/?${query}` : "/";
+
+      const stateObj = {
+        page: targetPage,
+        hostelId: hostel?.id ?? null,
+        tab: targetTab ?? null,
+      };
+
+      if (replace) {
+        window.history.replaceState(stateObj, "", url);
+      } else {
+        window.history.pushState(stateObj, "", url);
+      }
+    },
+    []
+  );
+
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      navigateTo("student");
+    }
+  }, [navigateTo]);
+
+  // Handle Browser Back / Forward buttons (popstate event)
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      let targetPage: Page | null = e.state?.page ?? null;
+      let hostelId: string | null = e.state?.hostelId ?? null;
+      let targetTab: Tab | null = e.state?.tab ?? null;
+
+      if (!targetPage) {
+        const urlState = getUrlState();
+        targetPage = urlState.page;
+        hostelId = urlState.hostelId;
+        targetTab = urlState.tab;
+      }
+
+      const defaultPage: Page = role === "owner" ? "owner" : "student";
+      const resolvedPage = targetPage || defaultPage;
+
+      setPage(resolvedPage);
+
+      if (hostelId) {
+        const found = hostels.find((h) => h.id === hostelId);
+        setSelectedHostel(found || null);
+      } else if (resolvedPage !== "detail" && resolvedPage !== "chat") {
+        setSelectedHostel(null);
+      }
+
+      if (targetTab) {
+        setActiveTab(targetTab);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [hostels, role]);
+
+  // Initial resolution for selectedHostel if loaded directly from URL with ?id=
+  useEffect(() => {
+    const urlState = getUrlState();
+    if (urlState.hostelId && !selectedHostel) {
+      const found = hostels.find((h) => h.id === urlState.hostelId);
+      if (found) setSelectedHostel(found);
+    }
+  }, [hostels, selectedHostel]);
 
   // ── Sync Page & Tab to sessionStorage ─────────────────────────────────────
   useEffect(() => {
@@ -136,26 +238,22 @@ const Index = () => {
   useEffect(() => {
     if (loading) return; // wait for auth state
 
-    if (user && role) {
-      // User is logged in — go straight to their dashboard
-      setPage(role === "owner" ? "owner" : "student");
-    } else if (user && !role) {
-      // OAuth user with no role yet — ask them to pick
-      setPage("role-select");
+    const urlState = getUrlState();
+    if (!urlState.page) {
+      if (user && role) {
+        setPage(role === "owner" ? "owner" : "student");
+      } else if (user && !role) {
+        setPage("role-select");
+      }
     }
-    // else: not logged in — stay at splash / role-select (handled below)
   }, [user, role, loading]);
 
   // ── Handle Google OAuth redirect: set role if pending ────────────────────
-  // Must await updateUser + refreshSession so user_metadata.role is set
-  // before the routing useEffect reads it.
   useEffect(() => {
     if (!user) return;
 
-    // Don't overwrite if role already set (returning Google user)
     if (user.user_metadata?.role) return;
 
-    // Read role from localStorage (primary) or URL param (fallback)
     const urlRole = new URLSearchParams(window.location.search).get("role");
     const pendingRole =
       localStorage.getItem("hostelmate-pending-role") || urlRole;
@@ -164,15 +262,12 @@ const Index = () => {
 
     (async () => {
       await supabase.auth.updateUser({ data: { role: pendingRole } });
-      // Refresh session so user_metadata reflects immediately in this tab
       await supabase.auth.refreshSession();
       localStorage.removeItem("hostelmate-pending-role");
-      // Clean URL param without triggering a reload
       window.history.replaceState({}, "", "/");
-      // Route to correct dashboard now that role is confirmed
-      setPage(pendingRole === "owner" ? "owner" : "student");
+      navigateTo(pendingRole === "owner" ? "owner" : "student", null, undefined, true);
     })();
-  }, [user]);
+  }, [user, navigateTo]);
 
   useEffect(() => {
     // Clear selected hostel when navigating away from detail or chat
@@ -184,31 +279,28 @@ const Index = () => {
   const handleSplashFinish = useCallback(() => {
     sessionStorage.setItem("hostelmate-splash-seen", "true");
     if (user && role) {
-      setPage(role === "owner" ? "owner" : "student");
+      navigateTo(role === "owner" ? "owner" : "student", null, undefined, true);
     } else {
-      setPage("student");
+      navigateTo("student", null, undefined, true);
     }
-  }, [user, role]);
+  }, [user, role, navigateTo]);
 
   const handleNavigate = useCallback((target: string) => {
-    setPage(target as Page);
-  }, []);
+    navigateTo(target as Page);
+  }, [navigateTo]);
 
   const handleSelectHostel = useCallback((hostel: Hostel) => {
-    setSelectedHostel(hostel);
-    setPage("detail");
-  }, []);
+    navigateTo("detail", hostel);
+  }, [navigateTo]);
 
   const handleLoginSuccess = useCallback((targetPage: Page) => {
-    setPage(targetPage);
-    if (targetPage === "student") setActiveTab("explore");
-  }, []);
+    navigateTo(targetPage, null, targetPage === "student" ? "explore" : undefined);
+  }, [navigateTo]);
 
   const handleSignOut = useCallback(async () => {
     await signOut();
-    setPage("role-select");
-    setActiveTab("explore");
-  }, [signOut]);
+    navigateTo("role-select", null, "explore");
+  }, [signOut, navigateTo]);
 
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
@@ -229,9 +321,8 @@ const Index = () => {
       status: "upcoming",
     };
     setBookings((prev) => [newBooking, ...prev]);
-    setPage("trips");
-    setActiveTab("trips");
-  }, []);
+    navigateTo("trips", null, "trips");
+  }, [navigateTo]);
 
   const handleEditBooking = useCallback((id: string, checkIn: string, checkOut: string) => {
     setBookings((prev) =>
@@ -245,10 +336,9 @@ const Index = () => {
 
   const handleTabChange = useCallback((tab: Tab) => {
     if (!user && (tab === "trips" || tab === "messages")) {
-      setPage("role-select");
+      navigateTo("role-select");
       return;
     }
-    setActiveTab(tab);
     const pageMap: Record<Tab, Page> = {
       explore: "student",
       wishlists: "wishlists",
@@ -256,8 +346,8 @@ const Index = () => {
       messages: "messages",
       profile: "profile",
     };
-    setPage(pageMap[tab]);
-  }, [user]);
+    navigateTo(pageMap[tab], null, tab);
+  }, [user, navigateTo]);
 
   const showBottomNav = [
     "student", "wishlists", "trips", "messages",
@@ -292,9 +382,9 @@ const Index = () => {
       return wrap(
         <RoleSelectPage
           onSelect={(role) =>
-            setPage(role === "student" ? "login-student" : "login-owner")
+            navigateTo(role === "student" ? "login-student" : "login-owner")
           }
-          onBack={() => setPage("student")}
+          onBack={handleBack}
         />
       );
 
@@ -303,7 +393,7 @@ const Index = () => {
         <LoginPage
           role="student"
           onLogin={() => handleLoginSuccess("student")}
-          onBack={() => setPage("role-select")}
+          onBack={handleBack}
         />
       );
 
@@ -312,7 +402,7 @@ const Index = () => {
         <LoginPage
           role="owner"
           onLogin={() => handleLoginSuccess("owner")}
-          onBack={() => setPage("role-select")}
+          onBack={handleBack}
         />
       );
 
@@ -344,13 +434,13 @@ const Index = () => {
       return wrap(selectedHostel ? (
         <HostelDetail
           hostel={selectedHostel}
-          onBack={() => setPage("student")}
+          onBack={handleBack}
           onBook={() => handleBookHostel(selectedHostel)}
           onOpenChat={() => {
             if (!user) {
-              setPage("role-select");
+              navigateTo("role-select");
             } else {
-              setPage("chat");
+              navigateTo("chat", selectedHostel);
             }
           }}
         />
@@ -363,7 +453,7 @@ const Index = () => {
 
     case "chat":
       return wrap(selectedHostel ? (
-        <CommunityChat hostel={selectedHostel} onBack={() => setPage("detail")} />
+        <CommunityChat hostel={selectedHostel} onBack={handleBack} />
       ) : (
         <>
           <StudentPage hostels={hostels} onSelectHostel={handleSelectHostel} favorites={favorites} onToggleFavorite={toggleFavorite} />
@@ -397,7 +487,7 @@ const Index = () => {
           <MessagesPage
             hostels={hostels}
             favorites={favorites}
-            onOpenChat={(h) => { setSelectedHostel(h); setPage("chat"); }}
+            onOpenChat={(h) => navigateTo("chat", h)}
           />
           <BottomNav active={activeTab} onTabChange={handleTabChange} />
         </>
@@ -408,7 +498,7 @@ const Index = () => {
         <>
           <ProfilePage
             isGuest={!user}
-            onBack={() => { setPage("student"); setActiveTab("explore"); }}
+            onBack={handleBack}
             onNavigate={handleNavigate}
             onSignOut={handleSignOut}
           />
@@ -419,7 +509,7 @@ const Index = () => {
     case "help":
       return wrap(
         <>
-          <HelpPage onBack={() => { setPage("student"); setActiveTab("explore"); }} />
+          <HelpPage onBack={handleBack} />
           <BottomNav active={activeTab} onTabChange={handleTabChange} />
         </>
       );
@@ -427,7 +517,7 @@ const Index = () => {
     case "contact":
       return wrap(
         <>
-          <ContactPage onBack={() => { setPage("student"); setActiveTab("explore"); }} />
+          <ContactPage onBack={handleBack} />
           <BottomNav active={activeTab} onTabChange={handleTabChange} />
         </>
       );
