@@ -2,7 +2,7 @@ import { Hostel } from "@/data/hostels";
 import { useState, useEffect, useMemo } from "react";
 import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import {
-  ArrowLeft, Star, MapPin, Phone, Wifi, Wind, Utensils, Dumbbell,
+  Star, MapPin, Phone, Wifi, Wind, Utensils, Dumbbell,
   ShieldCheck, Car, Zap, Droplets, BookOpen, Home, Sparkles, Sun,
   Send, User, MessageCircle, Trash2,
 } from "lucide-react";
@@ -135,13 +135,7 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
     <div className="min-h-screen bg-background">
       {/* ── Header ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <button
-            onClick={onBack}
-            className="rounded-lg p-2 text-foreground transition-colors hover:bg-secondary"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <h1 className="truncate text-lg font-bold text-foreground">
             {hostel.name}
           </h1>

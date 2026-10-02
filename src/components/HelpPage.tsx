@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, ChevronDown, ChevronUp, Search, BookOpen, MessageSquare, Shield, CreditCard, Home } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, BookOpen, MessageSquare, Shield, CreditCard, Home } from "lucide-react";
 
 interface HelpPageProps {
   onBack: () => void;
@@ -57,10 +57,7 @@ const HelpPage = ({ onBack }: HelpPageProps) => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="rounded-lg p-2 text-foreground transition-colors hover:bg-secondary">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold text-foreground">Help & FAQ</h1>
         </div>
       </header>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Mail, Phone, MapPin, Send, Check, MessageSquare, Clock } from "lucide-react";
+import { Mail, Phone, MapPin, Send, Check, MessageSquare, Clock } from "lucide-react";
 import { contactFormSchema, validateField, sanitizeText } from "@/lib/validation";
 import { formSubmitLimiter } from "@/lib/rateLimiter";
 
@@ -41,10 +41,7 @@ const ContactPage = ({ onBack }: ContactPageProps) => {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="rounded-lg p-2 text-foreground transition-colors hover:bg-secondary">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <h1 className="text-lg font-bold text-foreground">Contact Us</h1>
         </div>
       </header>

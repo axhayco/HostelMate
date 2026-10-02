@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { ArrowLeft, Hash, Pin, Send, Smile, Flag, Ban, Shield, ChevronDown, ChevronUp, X, MessageCircle } from "lucide-react";
+import { Hash, Pin, Send, Smile, Flag, Ban, Shield, ChevronDown, ChevronUp, X, MessageCircle } from "lucide-react";
 import { Hostel } from "@/data/hostels";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -253,9 +253,6 @@ const CommunityChat = ({ hostel, onBack }: CommunityChatProps) => {
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border bg-card/90 backdrop-blur-md">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="rounded-lg p-2 text-foreground transition-colors hover:bg-secondary">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
           <div className="flex-1 min-w-0">
             <h1 className="truncate text-base font-bold text-foreground">{hostel.name}</h1>
             <button onClick={() => setShowChannels(!showChannels)}

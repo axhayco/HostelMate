@@ -2,7 +2,7 @@ import { Hostel, mockHostels, ALL_AMENITIES } from "@/data/hostels";
 import { useState, useMemo, useEffect, useRef } from "react";
 import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import {
-  ArrowLeft, Plus, X, Pencil, Trash2, Users, BedDouble,
+  Plus, X, Pencil, Trash2, Users, BedDouble,
   Building2, Eye, Check, MapPin, Star, Wifi, WifiOff, ImagePlus, Loader2,
   TrendingUp, TrendingDown, IndianRupee, GraduationCap, Phone, Utensils,
   Camera, BedSingle, ChevronDown
@@ -321,10 +321,7 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
-          <button onClick={onBack} className="rounded-lg p-2 text-foreground transition-colors hover:bg-secondary">
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
         </div>
       </header>
