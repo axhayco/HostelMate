@@ -4,7 +4,8 @@ import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import {
   ArrowLeft, Plus, X, Pencil, Trash2, Users, BedDouble,
   Building2, Eye, Check, MapPin, Star, Wifi, WifiOff, ImagePlus, Loader2,
-  TrendingUp, TrendingDown, IndianRupee
+  TrendingUp, TrendingDown, IndianRupee, GraduationCap, Phone, Utensils,
+  Camera, BedSingle, ChevronDown
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
