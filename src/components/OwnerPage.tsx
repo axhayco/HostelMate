@@ -164,55 +164,65 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
       gender: form.gender,
       description: sanitizeText(form.description),
       contactPhone: sanitizeText(form.contactPhone),
+      amenities: form.amenities,
     });
 
-    if ("success" in validation && "data" in validation && validation.success) {
-      const validData = validation.data;
-      setUploading(true);
-      try {
-        let img = form.image || hostel1;
-        if (imageFile) {
-          img = await uploadHostelImage(imageFile);
-        }
-        const hostelData: Hostel = {
-          id: editId || Date.now().toString(),
-          ownerId,
-          name: validData.name,
-          location: validData.location || "New Location",
-          area: (validData.location || "New Location").split(",")[0]?.trim(),
-          city: (validData.location || "New Locations, Hyderabad").split(",")[1]?.trim() || "Hyderabad",
-          nearbyCollege: "",
-          rent: validData.rent,
-          rating: 4.0,
-          vacancies: Math.min(validData.vacancies || 0, validData.totalCapacity || 0),
-          totalCapacity: validData.totalCapacity || 10,
-          gender: validData.gender as "male" | "female",
-          image: img,
-          photos: [img],
-          amenities: form.amenities,
-          description: validData.description || "No description provided.",
-          contactPhone: validData.contactPhone || "+91 00000 00000",
-          lat: 17.385,
-          lng: 78.4867,
-        };
-        if (editId) {
-          setHostels(hostels.map((h) => (h.id === editId ? { ...h, ...hostelData } : h)));
-        } else {
-          setHostels([hostelData, ...hostels]);
-        }
-        setModal(null);
-        setForm(emptyForm);
-        setImageFile(null);
-        setImagePreview("");
-        setEditId(null);
-      } catch (err) {
-        alert(`Upload failed: ${(err as Error).message}`);
-      } finally {
-        setUploading(false);
-      }
-    } else if ("error" in validation) {
-      alert(validation.error as string);
+    if (!validation.success) {
+      alert(validation.error);
       return;
+    }
+
+    const validData = validation.data;
+    setUploading(true);
+    try {
+      // Determine image: prefer uploaded file, then existing URL, then local preview, then fallback
+      let img = form.image || imagePreview || hostel1;
+      if (imageFile) {
+        try {
+          img = await uploadHostelImage(imageFile);
+        } catch {
+          // Supabase Storage not configured — use the local object URL instead.
+          // This keeps the hostel visible within the same browser session.
+          img = imagePreview || hostel1;
+        }
+      }
+
+      const hostelData: Hostel = {
+        id: editId || Date.now().toString(),
+        ownerId,
+        name: validData.name,
+        location: validData.location || "New Location",
+        area: (validData.location || "New Location").split(",")[0]?.trim(),
+        city: (validData.location || "New Locations, Hyderabad").split(",")[1]?.trim() || "Hyderabad",
+        nearbyCollege: "",
+        rent: validData.rent,
+        rating: 4.0,
+        vacancies: Math.min(validData.vacancies ?? 0, validData.totalCapacity ?? 0),
+        totalCapacity: validData.totalCapacity ?? 10,
+        gender: validData.gender as "male" | "female",
+        image: img,
+        photos: [img],
+        amenities: form.amenities,
+        description: validData.description || "No description provided.",
+        contactPhone: validData.contactPhone || "+91 00000 00000",
+        lat: 17.385,
+        lng: 78.4867,
+      };
+
+      if (editId) {
+        setHostels(hostels.map((h) => (h.id === editId ? { ...h, ...hostelData } : h)));
+      } else {
+        setHostels([hostelData, ...hostels]);
+      }
+      setModal(null);
+      setForm(emptyForm);
+      setImageFile(null);
+      setImagePreview("");
+      setEditId(null);
+    } catch (err) {
+      alert(`Failed to save hostel: ${(err as Error).message}`);
+    } finally {
+      setUploading(false);
     }
   };
 

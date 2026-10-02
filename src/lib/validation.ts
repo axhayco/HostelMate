@@ -17,7 +17,7 @@ const nameField = z.string().min(1, "Name is required").max(100, "Name cannot ex
 const emailField = z.string().email("Invalid email address").max(254, "Email too long");
 const phoneField = z
     .string()
-    .regex(/^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/, "Invalid Indian mobile number")
+    .regex(/^(\+91[\s-]?)?[6-9]\d{9}$|^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$|^[6-9]\d{9}$/, "Invalid Indian mobile number (e.g. +91 9876543210)")
     .or(z.literal("")); // Allow empty for optional fields
 const passwordField = z.string().min(6, "Password must be at least 6 characters").max(128, "Password too long");
 
@@ -75,7 +75,7 @@ export const hostelFormSchema = z.object({
     totalCapacity: z.number().min(1, "Total capacity must be at least 1").max(1000, "Capacity cannot exceed 1000"),
     gender: z.enum(["male", "female"]),
     description: z.string().max(1000, "Description cannot exceed 1000 characters").optional().or(z.literal("")),
-    contactPhone: phoneField,
+    contactPhone: phoneField.optional().or(z.literal("")),
     amenities: z.array(z.string()).max(20, "Too many amenities"),
 }).strip().refine((data) => data.vacancies <= data.totalCapacity, {
     message: "Vacancies cannot exceed total capacity",
