@@ -33,25 +33,37 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
     const loadProfile = async () => {
       setLoading(true);
 
-      // Try to fetch from the profiles table
-      const { data } = await supabase
-        .from("profiles")
-        .select("name, email, profile_photo")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
       const meta = user.user_metadata ?? {};
 
-      setProfile({
-        name: data?.name || meta.full_name || meta.name || user.email?.split("@")[0] || "",
-        email: data?.email || user.email || "",
-        phone: meta.phone || "",
-        college: meta.college || "",
-        bio: meta.bio || "",
-        avatar: data?.profile_photo || meta.avatar_url || "",
-      });
+      try {
+        // Fetch from the profiles table matching 001_initial_schema (id, full_name, email, avatar_url, phone)
+        const { data } = await supabase
+          .from("profiles")
+          .select("full_name, email, avatar_url, phone")
+          .eq("id", user.id)
+          .maybeSingle();
 
-      setLoading(false);
+        setProfile({
+          name: data?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "",
+          email: data?.email || user.email || "",
+          phone: data?.phone || meta.phone || "",
+          college: meta.college || "",
+          bio: meta.bio || "",
+          avatar: data?.avatar_url || meta.avatar_url || "",
+        });
+      } catch (err) {
+        console.warn("Could not load from profiles table, using auth metadata:", err);
+        setProfile({
+          name: meta.full_name || meta.name || user.email?.split("@")[0] || "",
+          email: user.email || "",
+          phone: meta.phone || "",
+          college: meta.college || "",
+          bio: meta.bio || "",
+          avatar: meta.avatar_url || "",
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
     loadProfile();
@@ -81,18 +93,19 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
       setLoading(true);
 
       try {
-        // Upsert into profiles table (may fail due to RLS, handle gracefully)
+        // Upsert into profiles table (matching 001_initial_schema)
         const { error: dbError } = await supabase.from("profiles").upsert({
-          user_id: user.id,
-          name: validData.name,
+          id: user.id,
+          full_name: validData.name,
           email: validData.email,
+          phone: validData.phone,
         });
 
         if (dbError) {
           console.warn("Could not save to profiles table (likely RLS), proceeding with auth metadata:", dbError);
         }
 
-        // Also persist extra fields (phone, college, bio) to auth metadata
+        // Also persist extra fields to auth metadata
         const { error: authError } = await supabase.auth.updateUser({
           data: {
             full_name: validData.name,
