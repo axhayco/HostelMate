@@ -382,6 +382,7 @@ const Index = () => {
           onSelect={(role) =>
             navigateTo(role === "student" ? "login-student" : "login-owner")
           }
+          onBrowseGuest={() => navigateTo("student")}
           onBack={handleBack}
         />
       );
@@ -424,6 +425,7 @@ const Index = () => {
           hostels={ownerHostels}
           onHostelsChange={handleOwnerHostelsChange}
           onBack={handleSignOut}
+          onNavigateStudent={() => navigateTo("student")}
           ownerId={user?.id ?? "unknown"}
         />
       );
