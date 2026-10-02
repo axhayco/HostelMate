@@ -182,22 +182,18 @@ const Index = () => {
       let hostelId: string | null = e.state?.hostelId ?? null;
       let targetTab: Tab | null = e.state?.tab ?? null;
 
-      if (!targetPage) {
-        const urlState = getUrlState();
-        targetPage = urlState.page;
-        hostelId = urlState.hostelId;
-        targetTab = urlState.tab;
+      if (!targetPage || targetPage === "splash") {
+        // Stop backward navigation at the student/owner login clarifying page (role-select)
+        targetPage = "role-select";
+        window.history.pushState({ page: "role-select" }, "", "/?page=role-select");
       }
 
-      const defaultPage: Page = role === "owner" ? "owner" : "student";
-      const resolvedPage = targetPage || defaultPage;
-
-      setPage(resolvedPage);
+      setPage(targetPage);
 
       if (hostelId) {
         const found = hostels.find((h) => h.id === hostelId);
         setSelectedHostel(found || null);
-      } else if (resolvedPage !== "detail" && resolvedPage !== "chat") {
+      } else if (targetPage !== "detail" && targetPage !== "chat") {
         setSelectedHostel(null);
       }
 
@@ -208,7 +204,7 @@ const Index = () => {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [hostels, role]);
+  }, [hostels]);
 
   // Initial resolution for selectedHostel if loaded directly from URL with ?id=
   useEffect(() => {
@@ -234,17 +230,25 @@ const Index = () => {
     localStorage.setItem("hostelmate-bookings", JSON.stringify(bookings));
   }, [bookings]);
 
-  // ── After Supabase finishes loading, decide which page to show ───────────
+  // ── After Supabase finishes loading, decide which page to show & seed history stack ───────────
   useEffect(() => {
     if (loading) return; // wait for auth state
 
     const urlState = getUrlState();
     if (!urlState.page) {
-      if (user && role) {
-        setPage(role === "owner" ? "owner" : "student");
-      } else if (user && !role) {
-        setPage("role-select");
+      const target: Page = user && role === "owner" ? "owner" : user ? "student" : "role-select";
+      // Seed history stack with role-select as root anchor if not already set
+      if (!window.history.state || !window.history.state.page) {
+        window.history.replaceState({ page: "role-select" }, "", "/?page=role-select");
+        if (target !== "role-select") {
+          window.history.pushState(
+            { page: target, hostelId: null, tab: "explore" },
+            "",
+            target === "student" ? "/" : `/?page=${target}`
+          );
+        }
       }
+      setPage(target);
     }
   }, [user, role, loading]);
 
