@@ -64,8 +64,9 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
 
   const [modal, setModal] = useState<ModalMode>(null);
   const [form, setForm] = useState<HostelForm>(emptyForm);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("")
+  // Multi-photo state: up to 5 photos. First = thumbnail cover.
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [viewHostel, setViewHostel] = useState<Hostel | null>(null);
@@ -109,8 +110,8 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
 
   const openAdd = () => {
     setForm(emptyForm);
-    setImageFile(null);
-    setImagePreview("");
+    setPhotoFiles([]);
+    setPhotoPreviews([]);
     setEditId(null);
     setModal("add");
   };
@@ -127,18 +128,53 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
       contactPhone: h.contactPhone,
       image: h.image,
       amenities: [...h.amenities],
+      nearbyCollege: h.nearbyCollege || "",
+      roomType: "Double Sharing",
+      mealsIncluded: h.amenities.includes("Meals Included"),
     });
-    setImageFile(null);
-    setImagePreview(h.image);
+    setPhotoFiles([]);
+    // Pre-populate previews from existing saved photos
+    setPhotoPreviews(h.photos && h.photos.length > 0 ? [...h.photos] : h.image ? [h.image] : []);
     setEditId(h.id);
     setModal("edit");
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    // Max 5 photos total
+    const remaining = 5 - photoPreviews.length;
+    const toAdd = files.slice(0, remaining);
+    setPhotoFiles((prev) => [...prev, ...toAdd]);
+    setPhotoPreviews((prev) => [
+      ...prev,
+      ...toAdd.map((f) => URL.createObjectURL(f)),
+    ]);
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+  };
+
+  const removePhoto = (idx: number) => {
+    setPhotoPreviews((prev) => prev.filter((_, i) => i !== idx));
+    setPhotoFiles((prev) => {
+      // Only photoFiles added in THIS session are tracked; existing URLs don't have a File entry.
+      // We track files aligned to the tail of previews that are objectURLs.
+      const existingCount = photoPreviews.length - photoFiles.length;
+      const fileIdx = idx - existingCount;
+      if (fileIdx >= 0 && fileIdx < prev.length) {
+        return prev.filter((_, i) => i !== fileIdx);
+      }
+      return prev;
+    });
+  };
+
+  const makeThumb = (idx: number) => {
+    // Move selected photo to index 0 (thumbnail)
+    setPhotoPreviews((prev) => {
+      const updated = [...prev];
+      const [item] = updated.splice(idx, 1);
+      return [item, ...updated];
+    });
   };
 
   const openOccupancy = (h: Hostel) => {
@@ -175,17 +211,26 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
     const validData = validation.data;
     setUploading(true);
     try {
-      // Determine image: prefer uploaded file, then existing URL, then local preview, then fallback
-      let img = form.image || imagePreview || hostel1;
-      if (imageFile) {
+      // Upload any new photo Files; fall back to local objectURL on Supabase failure
+      const existingCount = photoPreviews.length - photoFiles.length;
+      const resolvedPhotos: string[] = [...photoPreviews.slice(0, existingCount)];
+      for (const file of photoFiles) {
         try {
-          img = await uploadHostelImage(imageFile);
+          const url = await uploadHostelImage(file);
+          resolvedPhotos.push(url);
         } catch {
-          // Supabase Storage not configured — use the local object URL instead.
-          // This keeps the hostel visible within the same browser session.
-          img = imagePreview || hostel1;
+          // Supabase Storage unavailable — keep local objectURL
+          resolvedPhotos.push(URL.createObjectURL(file));
         }
       }
+
+      // First photo = thumbnail; fallback to hostel1 if none provided
+      const thumbnail = resolvedPhotos[0] || form.image || hostel1;
+
+      // Auto-include "Meals Included" amenity if the toggle is on
+      const amenities = form.mealsIncluded
+        ? Array.from(new Set([...form.amenities, "Meals Included"]))
+        : form.amenities.filter((a) => a !== "Meals Included");
 
       const hostelData: Hostel = {
         id: editId || Date.now().toString(),
@@ -193,16 +238,16 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
         name: validData.name,
         location: validData.location || "New Location",
         area: (validData.location || "New Location").split(",")[0]?.trim(),
-        city: (validData.location || "New Locations, Hyderabad").split(",")[1]?.trim() || "Hyderabad",
-        nearbyCollege: "",
+        city: (validData.location || "New Location, Hyderabad").split(",")[1]?.trim() || "Hyderabad",
+        nearbyCollege: form.nearbyCollege,
         rent: validData.rent,
         rating: 4.0,
         vacancies: Math.min(validData.vacancies ?? 0, validData.totalCapacity ?? 0),
         totalCapacity: validData.totalCapacity ?? 10,
         gender: validData.gender as "male" | "female",
-        image: img,
-        photos: [img],
-        amenities: form.amenities,
+        image: thumbnail,
+        photos: resolvedPhotos.length > 0 ? resolvedPhotos : [thumbnail],
+        amenities,
         description: validData.description || "No description provided.",
         contactPhone: validData.contactPhone || "+91 00000 00000",
         lat: 17.385,
@@ -216,8 +261,8 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
       }
       setModal(null);
       setForm(emptyForm);
-      setImageFile(null);
-      setImagePreview("");
+      setPhotoFiles([]);
+      setPhotoPreviews([]);
       setEditId(null);
     } catch (err) {
       alert(`Failed to save hostel: ${(err as Error).message}`);
@@ -496,99 +541,227 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
               </button>
             </div>
 
-            <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
-              {/* Basic Info */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Hostel Name *</label>
-                <input type="text" placeholder="e.g. Sunrise Boys Hostel" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
-              </div>
+            <div className="space-y-5 max-h-[72vh] overflow-y-auto pr-1">
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Location</label>
-                <input type="text" placeholder="e.g. Kukatpally, Hyderabad" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} />
-              </div>
+              {/* ── SECTION: Basic Info ───────────────────────────── */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-4">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Basic Information</p>
 
-              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Monthly Rent (₹) *</label>
-                  <input type="number" placeholder="6500" value={form.rent} onChange={(e) => setForm({ ...form, rent: e.target.value })} className={inputClass} />
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Building2 className="h-3.5 w-3.5" /> Hostel Name <span className="text-destructive">*</span>
+                  </label>
+                  <input type="text" placeholder="e.g. Sunrise Boys Hostel" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} />
                 </div>
+
                 <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Gender</label>
-                  <div className="flex gap-2">
-                    {(["male", "female"] as const).map((g) => (
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <MapPin className="h-3.5 w-3.5" /> Full Address <span className="text-destructive">*</span>
+                  </label>
+                  <input type="text" placeholder="e.g. H.No 45, Kukatpally, Hyderabad" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} className={inputClass} />
+                </div>
+
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <GraduationCap className="h-3.5 w-3.5" /> Nearest College / Institution
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={form.nearbyCollege}
+                      onChange={(e) => setForm({ ...form, nearbyCollege: e.target.value })}
+                      className={`${inputClass} appearance-none pr-8`}
+                    >
+                      <option value="">-- Select nearest college --</option>
+                      {NEARBY_COLLEGES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Phone className="h-3.5 w-3.5" /> Contact Phone
+                  </label>
+                  <input type="tel" placeholder="+91 98765 43210" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className={inputClass} />
+                </div>
+              </div>
+
+              {/* ── SECTION: Pricing & Capacity ──────────────────── */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-4">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Pricing & Capacity</p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                      <IndianRupee className="h-3.5 w-3.5" /> Monthly Rent <span className="text-destructive">*</span>
+                    </label>
+                    <input type="number" placeholder="6500" value={form.rent} onChange={(e) => setForm({ ...form, rent: e.target.value })} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                      <Users className="h-3.5 w-3.5" /> Gender <span className="text-destructive">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      {(["male", "female"] as const).map((g) => (
+                        <button
+                          key={g}
+                          onClick={() => setForm({ ...form, gender: g })}
+                          className={`flex-1 rounded-xl py-2.5 text-xs font-semibold capitalize transition-all ${
+                            form.gender === g ? "bg-primary text-primary-foreground" : "border border-input bg-background text-foreground hover:bg-secondary"
+                          }`}
+                        >
+                          {g === "male" ? "👦 Boys" : "👧 Girls"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                      <BedDouble className="h-3.5 w-3.5" /> Total Beds <span className="text-destructive">*</span>
+                    </label>
+                    <input type="number" placeholder="30" value={form.totalCapacity} onChange={(e) => setForm({ ...form, totalCapacity: e.target.value })} className={inputClass} />
+                  </div>
+                  <div>
+                    <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                      <BedSingle className="h-3.5 w-3.5" /> Vacant Now
+                    </label>
+                    <input type="number" placeholder="5" value={form.vacancies} onChange={(e) => setForm({ ...form, vacancies: e.target.value })} className={inputClass} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="mb-1 flex items-center gap-1 text-xs font-semibold text-muted-foreground">
+                    <BedSingle className="h-3.5 w-3.5" /> Room Sharing Type
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {ROOM_TYPES.map((rt) => (
                       <button
-                        key={g}
-                        onClick={() => setForm({ ...form, gender: g })}
-                        className={`flex-1 rounded-xl py-2.5 text-xs font-semibold capitalize transition-all ${
-                          form.gender === g ? "bg-primary text-primary-foreground" : "border border-input bg-background text-foreground hover:bg-secondary"
+                        key={rt}
+                        onClick={() => setForm({ ...form, roomType: rt })}
+                        className={`rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                          form.roomType === rt ? "bg-primary text-primary-foreground" : "border border-input bg-background text-foreground hover:bg-secondary"
                         }`}
                       >
-                        {g}
+                        {rt}
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {/* Meals toggle */}
+                <div className="flex items-center justify-between rounded-xl bg-background border border-input px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Utensils className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Meals Included</p>
+                      <p className="text-[11px] text-muted-foreground">Breakfast, Lunch & Dinner provided</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const next = !form.mealsIncluded;
+                      const amenities = next
+                        ? Array.from(new Set([...form.amenities, "Meals Included"]))
+                        : form.amenities.filter((a) => a !== "Meals Included");
+                      setForm({ ...form, mealsIncluded: next, amenities });
+                    }}
+                    className={`relative h-6 w-11 rounded-full transition-colors ${
+                      form.mealsIncluded ? "bg-primary" : "bg-secondary"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow transition-transform ${
+                        form.mealsIncluded ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Total Capacity (beds)</label>
-                  <input type="number" placeholder="30" value={form.totalCapacity} onChange={(e) => setForm({ ...form, totalCapacity: e.target.value })} className={inputClass} />
+              {/* ── SECTION: Photos ───────────────────────────────── */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Photos</p>
+                  <p className="text-[11px] text-muted-foreground">{photoPreviews.length}/5 · First photo = Cover thumbnail</p>
                 </div>
-                <div>
-                  <label className="mb-1 block text-xs font-semibold text-muted-foreground">Vacant Beds</label>
-                  <input type="number" placeholder="5" value={form.vacancies} onChange={(e) => setForm({ ...form, vacancies: e.target.value })} className={inputClass} />
-                </div>
+
+                {/* Photo grid */}
+                {photoPreviews.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2">
+                    {photoPreviews.map((src, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden border-2 border-transparent" style={idx === 0 ? { borderColor: "hsl(var(--primary))" } : {}}>
+                        <img src={src} alt={`Photo ${idx + 1}`} className="h-20 w-full object-cover" />
+                        {idx === 0 && (
+                          <span className="absolute top-1 left-1 rounded-md bg-primary px-1.5 py-0.5 text-[9px] font-bold text-white">COVER</span>
+                        )}
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                          {idx !== 0 && (
+                            <button
+                              onClick={() => makeThumb(idx)}
+                              className="rounded-lg bg-white/20 px-2 py-1 text-[10px] font-semibold text-white hover:bg-primary"
+                            >
+                              Set Cover
+                            </button>
+                          )}
+                          <button
+                            onClick={() => removePhoto(idx)}
+                            className="flex h-7 w-7 items-center justify-center rounded-full bg-destructive/80 text-white hover:bg-destructive"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    {photoPreviews.length < 5 && (
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex h-20 items-center justify-center rounded-xl border-2 border-dashed border-input bg-background text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {photoPreviews.length === 0 && (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-background py-8 transition-colors hover:border-primary hover:bg-primary/5"
+                  >
+                    <Camera className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium text-muted-foreground">Add up to 5 photos</p>
+                    <p className="text-xs text-muted-foreground/70">First photo becomes the cover thumbnail</p>
+                  </button>
+                )}
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={handleFilesChange}
+                />
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Description</label>
+              {/* ── SECTION: Description ─────────────────────────── */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Description</p>
                 <textarea
-                  rows={3}
-                  placeholder="Describe your hostel..."
+                  rows={4}
+                  placeholder="Describe what makes your hostel special — location perks, room quality, mess quality, nearby transport, etc."
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   className={`${inputClass} resize-none`}
                 />
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Contact Phone</label>
-                <input type="tel" placeholder="+91 98765 43210" value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className={inputClass} />
-              </div>
-
-              {/* Photo Upload */}
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-muted-foreground">Hostel Photo (optional)</label>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-input bg-background py-5 transition-colors hover:border-primary hover:bg-primary/5"
-                >
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="h-28 w-full rounded-lg object-cover" />
-                  ) : (
-                    <>
-                      <ImagePlus className="h-7 w-7 text-muted-foreground" />
-                      <p className="text-xs text-muted-foreground">Click to select a photo</p>
-                    </>
-                  )}
-                  {imagePreview && (
-                    <span className="absolute bottom-2 right-2 rounded-lg bg-primary/80 px-2 py-1 text-[10px] font-semibold text-white">Change</span>
-                  )}
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </div>
-
-              {/* Amenities */}
-              <div>
-                <label className="mb-2 block text-xs font-semibold text-muted-foreground">Amenities</label>
+              {/* ── SECTION: Amenities ───────────────────────────── */}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Amenities & Features</p>
                 <div className="flex flex-wrap gap-2">
                   {ALL_AMENITIES.map((a) => {
                     const active = form.amenities.includes(a);
@@ -617,9 +790,9 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {uploading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Uploading photo...</>
+                <><Loader2 className="h-4 w-4 animate-spin" /> Saving hostel...</>
               ) : (
-                modal === "add" ? "Add Hostel" : "Save Changes"
+                modal === "add" ? "✓ List My Hostel" : "Save Changes"
               )}
             </button>
           </div>
