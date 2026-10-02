@@ -17,6 +17,25 @@ import { hostelFormSchema, validateField, sanitizeText } from "@/lib/validation"
 import { formSubmitLimiter } from "@/lib/rateLimiter";
 import hostel1 from "@/assets/hostel1.jpg";
 
+const NEARBY_COLLEGES = [
+  "JNTU Hyderabad",
+  "CBIT Hyderabad",
+  "VNR VJIET",
+  "Gokaraju Rangaraju (GRIET)",
+  "Osmania University",
+  "BITS Pilani Hyderabad",
+  "Mahindra University",
+  "Vasavi College of Engineering",
+];
+
+const ROOM_TYPES = [
+  "Single Sharing",
+  "2 Sharing",
+  "3 Sharing",
+  "4 Sharing",
+  "Dormitory",
+];
+
 interface OwnerPageProps {
   hostels: Hostel[];
   onHostelsChange: (hostels: Hostel[]) => void;
@@ -35,6 +54,9 @@ interface HostelForm {
   gender: "male" | "female";
   description: string;
   contactPhone: string;
+  nearbyCollege: string;
+  roomType: string;
+  mealsIncluded: boolean;
   /** Existing image URL (for saved hostels) */
   image: string;
   amenities: string[];
@@ -49,6 +71,9 @@ const emptyForm: HostelForm = {
   gender: "male",
   description: "",
   contactPhone: "",
+  nearbyCollege: "",
+  roomType: "2 Sharing",
+  mealsIncluded: true,
   image: "",
   amenities: [],
 };
