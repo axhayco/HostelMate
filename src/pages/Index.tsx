@@ -236,7 +236,11 @@ const Index = () => {
     if (!urlState.page) {
       const target: Page = user && role === "owner" ? "owner" : "student";
       if (!window.history.state || !window.history.state.page) {
-        window.history.replaceState({ page: target }, "", target === "student" ? "/" : `/?page=${target}`);
+        window.history.replaceState(
+          { page: target, hostelId: null, tab: "explore" },
+          "",
+          target === "student" ? "/" : `/?page=${target}`
+        );
       }
       setPage(target);
     }
