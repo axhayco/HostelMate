@@ -1,119 +1,121 @@
-# 🏠 HOSTELMATE — smart hostel living & seamless owner management
+# 🏠 HOSTELMATE — Airbnb for Hostels & PGs
 
-> **Dual-interface, AI-assisted hostel & PG management platform powered by deterministic intelligence and real-time backend synchronization.**
+> **Student-first marketplace & discovery platform for finding, comparing, and booking verified hostels and PGs in new cities.**
 
 ![Vite](https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.3-61DAFB?style=flat-square&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38BDF8?style=flat-square&logo=tailwindcss&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Backend%20%26%20Auth-3ECF8E?style=flat-square&logo=supabase&logoColor=white)
-![AI Engine](https://img.shields.io/badge/AI%20Engine-Local%20%26%20Deterministic-10B981?style=flat-square)
-![UI Components](https://img.shields.io/badge/UI-Radix%20%2B%20shadcn-000000?style=flat-square)
+![AI Concierge](https://img.shields.io/badge/AI%20Concierge-Local%20%26%20Deterministic-10B981?style=flat-square)
+![Product](https://img.shields.io/badge/Product-Student%20Housing%20Marketplace-FF385C?style=flat-square)
 
 ---
 
 > [!IMPORTANT]
-> **READ THIS FIRST — CRITICAL GUARDRAILS & ARCHITECTURE**
-> - **Dual-Role RBAC:** HostelMate features role-based access control (Student vs. Hostel Owner) seamlessly integrated with Supabase Authentication and PostgreSQL Row-Level Security (RLS).
-> - **Privacy-First Local AI Agent:** The embedded HostelMate Digital Assistant operates 100% client-side with a deterministic state machine. No external API key dependencies, zero network latency, and zero token costs.
-> - **Actionable Feedback Loop:** Daily meal ratings and complaint management systems bridge student grievances directly to owner action dashboards.
-> - **Geospatial Discovery:** Interactive map support powered by Leaflet allows students to discover hostels by proximity, budget, and verified amenities.
+> **READ THIS FIRST — CRITICAL PRODUCT VISION & GUARDRAILS**
+> - **The Model for Hostels:** HostelMate is a two-sided marketplace connecting relocating students directly with verified hostel and PG owners.
+> - **Zero-Broker Friction:** Removes middlemen, hidden broker commissions, and misleading physical visits by providing transparent pricing, verified amenity tags, and accurate location mapping.
+> - **End-to-End Housing Lifecycle:** Extends beyond initial search — supporting students post-booking with community resident chat, daily mess ratings, maintenance requests, and digital leave logs.
+> - **Privacy-First AI Concierge:** Built-in client-side assistant that helps students calculate budgets, check vacancy, and find suitable accommodations with zero external API fees and zero latency.
 
 ---
 
-## 🌟 1. Overview & The Operating Thesis
+## 🌟 1. Overview & The Student Relocation Thesis
 
-**HostelMate** bridges the operational gap between hostel residents and accommodation owners. In traditional hostel management, students face unresolved maintenance complaints, unmonitored meal quality, and opaque billing. Meanwhile, hostel owners struggle with manual rent tracking, room vacancy management, and disorganized communication channels.
+Every academic quarter, millions of students relocate to education hubs (such as Kota, Bengaluru, Delhi, Pune, Hyderabad, and Chennai) to pursue higher education or competitive exams. 
 
-HostelMate closes this gap with an intuitive dual-interface web application supported by an instant, zero-latency local AI digital assistant.
+However, finding suitable accommodation in an unfamiliar city is stressful, unorganized, and plagued by:
+- High brokerage fees and unverified broker listings.
+- Misleading photographs and hidden maintenance/utility charges.
+- Lack of transparent reviews regarding mess food quality and safety.
+- Distance mismatch between hostels and colleges/coaching institutes.
 
-> **The Operating Thesis:** *We replaced fragmented chat groups and paper registers with an integrated real-time engine, and replaced expensive cloud LLMs with a fast, deterministic client-side assistant.*
+**HostelMate** solves student relocation by bringing **seamless discovery, map search, instant booking, and transparent reviews** to the hostel and PG ecosystem.
+
+> **The Relocation Thesis:** *Finding a home in a new city shouldn't feel like a gamble. We turn room hunting into a 5-minute visual exploration and connect students directly to verified property owners.*
 
 ---
 
 ## ❗ 2. The Problem Statement
 
-| Operational Challenge | Traditional Method | HostelMate Solution |
+| Relocation Friction | Current Reality | The HostelMate Marketplace Solution |
 |---|---|---|
-| **Complaint Resolution** | Paper registers & lost WhatsApp messages | Ticket tracking with status updates & priority flags |
-| **Mess Quality Control** | Verbal complaints ignored by management | Daily dish-by-dish ratings with owner analytics |
-| **Room Allocation** | Manual logbooks & double-booking risks | Real-time vacancy updates and instant booking requests |
-| **Student Support** | Delayed response from busy wardens | 24/7 local AI assistant for instant FAQs & status checks |
-| **Rent & Utilities** | Physical receipts & manual meter tracking | Digital bill calculation & electricity unit tracking |
+| **Hostel Discovery** | Relying on local brokers & physical door-to-door visits | Interactive Leaflet map & location-based search near colleges |
+| **Trust & Transparency** | Fake photos & undisclosed extra charges | Verified photo galleries, transparent pricing, & amenity badges |
+| **Booking Assurance** | Verbal promises & unrecorded cash advances | Digital booking engine ("Trips") with instant confirmation |
+| **Food & Living Quality** | No way to know mess quality before moving in | Authentic student reviews and daily dish-by-dish meal ratings |
+| **Community Connection** | Moving to a new city alone without contacts | Internal hostel community chat to connect with future roommates |
 
 ---
 
 ## 💡 3. Five Contrarian Product Choices
 
-1. **Local Deterministic AI Assistant:** Operating entirely on client-side state machines without requiring external LLM API keys. It delivers 100% reproducible answers for queries like electricity balance, leave status, and mess menus instantly.
-2. **Unified Dual-Role Codebase:** A single responsive Web App serving both student convenience and owner administrative power seamlessly through context-aware routing.
-3. **Dish-Level Daily Mess Ratings:** Rather than generic 5-star reviews, students rate individual meals (Breakfast, Lunch, Dinner), providing actionable feedback to mess managers.
-4. **Interactive Geospatial Search:** Integrated Leaflet map views with instant amenity filtering (Wi-Fi, AC, Laundry, Security) to make hostel hunting visual and transparent.
-5. **Privacy-Conscious Community Hub:** Internal hostel chat channels that enable student interaction and announcements without exposing personal phone numbers.
+1. **Clean Discovery Engine for Student Housing:** Designed specifically for student priorities — filtering by proximity to institutions, gender categories (Boys/Girls/Co-ed), AC/Non-AC, food inclusion, and Wi-Fi speed.
+2. **Beyond Search: Post-Booking Living Suite:** Unlike standard room-listing directories that disappear after booking, HostelMate transitions into the resident's daily portal for mess menu tracking, complaint filing, and community updates.
+3. **Multi-Owner Marketplace Isolation:** Independent property owners can list their hostels, manage room inventories, and track revenues without cross-owner data exposure.
+4. **Local Zero-Latency AI Search Concierge:** An embedded client-side agent (`AgentControlPlane`) that assists students in narrowing down hostels by budget, room preference, and location without expensive cloud AI latency.
+5. **Verified Peer Community & Chat:** Resident-only internal chat rooms that foster community among students living in the same hostel without sharing personal contact numbers.
 
 ---
 
-## 🎯 4. Core Surfaces
+## 🎯 4. Core Marketplace Surfaces
 
-### 👨🎓 Student Surfaces
+### 🎒 Student Marketplace Surfaces
 | Surface Name | Primary Purpose |
 |---|---|
-| **Student Dashboard** | Central hub showing current hostel status, room info, quick actions, and news |
-| **Hostel Discovery & Map** | Filterable list and Leaflet map view for finding and comparing hostels |
-| **Mess & Meal Rating** | Daily meal menu view with dish-level rating and feedback submitter |
-| **Complaint Portal** | Form for submitting maintenance tickets (Plumbing, Electrical, Wi-Fi) with photo attachments |
-| **Trips & Bookings** | Active booking manager and upcoming stay itinerary |
-| **Community Chat** | Moderated resident chat room for notices and peer discussions |
-| **Digital Assistant** | Floating AI agent for instant queries, leave application, and utility checks |
+| **Explore Hub** | Airbnb-style search bar, category pills (Luxury, Budget, Near Campus), and hostel cards |
+| **Interactive Map View** | Leaflet-powered geospatial search showing hostel pins near educational hubs |
+| **Hostel Detail View** | Comprehensive page featuring high-res imagery, room tariffs, amenity badges, and map coordinates |
+| **Wishlists & Favorites** | Save and compare preferred hostels before making a final booking decision |
+| **Trips & Bookings Manager** | Active stay itineraries, check-in/out dates, booking status updates, and cancellation controls |
+| **Community Chat** | Real-time messaging with co-residents of the booked hostel |
+| **AI Relocation Assistant** | Local conversational assistant for instant vacancy checks, FAQ resolution, and budget advice |
 
-### 🏢 Owner Surfaces
+### 🏠 Host / Owner Surfaces
 | Surface Name | Primary Purpose |
 |---|---|
-| **Owner Command Center** | High-level metrics for total revenue, occupancy rate, and active complaints |
-| **Occupancy & Room Manager** | Room allocation grid, tenant directory, and vacancy toggles |
-| **Mess Dashboard** | Menu planner, meal quality analytics, and student rating breakdown |
-| **Complaints Management** | Kanban/list dashboard to assign, resolve, and prioritize resident tickets |
-| **Broadcast & Announcements** | Notice creator to send instant announcements to all residents |
+| **Hostel Listing Portal** | Add new property listings with images, location, room types, pricing, and amenities |
+| **Occupancy & Inventory Manager** | Real-time room allocation grid, occupied beds, and available vacancy toggles |
+| **Mess & Menu Manager** | Publish daily breakfast, lunch, and dinner menus and review student ratings |
+| **Grievance Resolution Desk** | Track, assign, and resolve maintenance complaints submitted by residents |
+| **Notice & Broadcast Center** | Send instant announcements to all booked residents |
 
 ---
 
-## 🧠 5. Architecture & Workflows
+## 🧠 5. Architecture & Marketplace Workflows
 
-### (a) System Architecture Flow
+### (a) Student Discovery & Booking Flow
 ```mermaid
 flowchart TD
-    User([User Access]) --> Auth{Supabase Auth}
-    Auth -->|Student Role| StudentApp[Student Dashboard & Features]
-    Auth -->|Owner Role| OwnerApp[Owner Command Center]
-    
-    StudentApp --> StateCtx[Hostel & Auth Context]
-    OwnerApp --> StateCtx
-    
-    StateCtx --> SupabaseDB[(Supabase PostgreSQL)]
-    StateCtx --> AgentEngine[Local AI Assistant Engine]
-    
-    AgentEngine -->|Deterministic Flow| AgentUI[Agent Control Plane UI]
+    Student Arrival[Student Moves to New City] --> Search[Search City / Campus on HostelMate]
+    Search --> MapFilter[Filter by Price, Amenities, & Proximity on Leaflet Map]
+    MapFilter --> Inspect[View Hostel Details, Photos, & Mess Ratings]
+    Inspect --> Wishlist{Save to Wishlist?}
+    Wishlist -->|Yes| WishlistPage[Wishlist Collection]
+    Wishlist -->|Book Now| BookTrip[Create Booking Entry in Trips]
+    BookTrip --> OwnerSync[Sync Booking to Owner Dashboard]
+    OwnerSync --> Confirmed[Stay Confirmed & Access Community Chat]
 ```
 
-### (b) Maintenance Complaint Lifecycle
+### (b) Marketplace Data Isolation Architecture
 ```mermaid
-flowchart LR
-    StudentSubmit[Student Submits Ticket] --> CategoryTag[Categorize: Electrical/Plumbing/Wi-Fi]
-    CategoryTag --> OwnerNotify[Owner Dashboard Notification]
-    OwnerNotify --> UpdateStatus[Owner Updates Status: In Progress]
-    UpdateStatus --> RealtimeSync[Supabase Realtime Sync]
-    RealtimeSync --> Resolved[Ticket Marked Resolved]
+flowchart TD
+    OwnerA[Owner A Dashboard] -->|Manages| ListingA[Hostel Listing A]
+    OwnerB[Owner B Dashboard] -->|Manages| ListingB[Hostel Listing B]
+    
+    ListingA --> MarketplaceDB[(Global Marketplace Storage)]
+    ListingB --> MarketplaceDB
+    
+    MarketplaceDB -->|Unified Search| StudentView[Student Marketplace Feed & Map]
 ```
 
-### (c) Local AI Assistant Intent Engine
+### (c) Local AI Relocation Concierge
 ```mermaid
 flowchart LR
-    UserInput[User Types Query] --> KeywordMatch[Local Intent Parser]
-    KeywordMatch --> RoleCheck{Check User Role}
-    RoleCheck -->|Student| StudentSkills[Electricity / Menu / Leave / Vacancy]
-    RoleCheck -->|Owner| OwnerSkills[Occupancy / Revenue / Pending Complaints]
-    StudentSkills --> ExecuteAction[Return Instant UI State Response]
-    OwnerSkills --> ExecuteAction
+    Query[Student Query: "Find AC hostels under ₹8,000 near me"] --> IntentParser[Local Intent & Keyword Matching]
+    IntentParser --> FilterEngine[Filter Marketplace Data locally]
+    FilterEngine --> AssistantResponse[Instant Custom Recommendation Card]
 ```
 
 ---
@@ -122,14 +124,12 @@ flowchart LR
 
 | Layer | Technology | Purpose & Role |
 |---|---|---|
-| **Frontend Framework** | React 18 + Vite 5 | Fast SPA runtime and HMR build environment |
-| **Language** | TypeScript 5 | Strict type-safety across components and data models |
-| **Styling & UI** | Tailwind CSS + Radix UI | Modern responsive design with accessible primitive components |
-| **Component Library** | shadcn/ui + Lucide Icons | Premium aesthetic typography, dialogs, drawers, and icons |
-| **Database & Auth** | Supabase | PostgreSQL database, Row Level Security (RLS), and JWT Auth |
-| **Maps & Analytics** | Leaflet + Recharts | Interactive map view and dashboard data visualization |
-| **Local AI Engine** | Custom State Machine (`src/agent/`) | Zero-cost deterministic conversational AI agent |
-| **State & Forms** | TanStack Query + React Hook Form + Zod | Data fetching, form state management, and schema validation |
+| **Marketplace Web App** | React 18 + Vite 5 + TypeScript | Lightning-fast SPA with client-side routing & URL state sync |
+| **Styling & UI Systems** | Tailwind CSS + Radix UI + shadcn/ui | Airbnb-inspired modern aesthetics, responsive drawer menus, and dialogs |
+| **Geospatial Engine** | Leaflet + `@types/leaflet` | Interactive map interface for locating hostels near student hubs |
+| **Database & Auth** | Supabase PostgreSQL + Auth | Secure JWT authentication, Row-Level Security (RLS), & realtime DB |
+| **Local AI Concierge** | Custom State Machine (`src/agent/`) | Zero-cost client-side assistant for student discovery and FAQs |
+| **State & Storage** | React Context + LocalStorage Sync | Persistent bookmarks, favorites, bookings ("Trips"), and owner state |
 
 ---
 
@@ -137,35 +137,36 @@ flowchart LR
 
 ```text
 HostelMate/
- ├── public/                  [Static assets & favicon]
+ ├── public/                  [Static assets, logo & map markers]
  ├── src/
- │    ├── agent/              [Local AI engine rules & skills definitions]
+ │    ├── agent/              [Local AI concierge rules & skills]
  │    │    ├── skills.json
  │    │    └── system_rules.md
- │    ├── components/         [Application components]
- │    │    ├── AgentControlPlane.tsx    [Local AI Assistant shell]
+ │    ├── components/         [Marketplace & Owner components]
+ │    │    ├── AgentControlPlane.tsx    [AI relocation assistant]
+ │    │    ├── BottomNav.tsx            [Airbnb-style mobile navigation bar]
  │    │    ├── CommunityChat.tsx        [Resident chat hub]
- │    │    ├── ComplaintForm.tsx        [Maintenance ticket submission]
- │    │    ├── HostelCard.tsx           [Hostel preview card]
- │    │    ├── HostelDetail.tsx         [Detailed hostel view & booking]
- │    │    ├── HostelMap.tsx            [Leaflet interactive map]
- │    │    ├── LoginPage.tsx            [Authentication & role login]
- │    │    ├── MessRatingWidget.tsx     [Student mess rating interface]
- │    │    ├── OwnerComplaintsDashboard.tsx [Owner ticket management]
- │    │    ├── OwnerMessDashboard.tsx   [Owner menu planner & ratings]
- │    │    ├── OwnerPage.tsx            [Owner command center]
- │    │    ├── ProfilePage.tsx          [User profile & settings]
- │    │    ├── StudentPage.tsx          [Student main dashboard]
- │    │    └── ui/                  [Radix UI / shadcn base components]
- │    ├── context/            [React Context providers: Auth & Hostel]
- │    ├── hooks/              [Custom React hooks]
- │    ├── lib/                [Utilities, utils.ts, Supabase client]
- │    ├── pages/              [Main route views]
- │    └── types/              [TypeScript interface definitions]
- ├── supabase/                [Supabase config & database migrations]
+ │    │    ├── ComplaintForm.tsx        [Post-booking maintenance portal]
+ │    │    ├── HostelCard.tsx           [Hostel preview card with pricing & rating]
+ │    │    ├── HostelDetail.tsx         [Rich hostel landing page with booking CTA]
+ │    │    ├── HostelMap.tsx            [Leaflet interactive search map]
+ │    │    ├── LoginPage.tsx            [Student & Owner login modals]
+ │    │    ├── MessRatingWidget.tsx     [Daily mess meal rating widget]
+ │    │    ├── MessagesPage.tsx         [Student messaging dashboard]
+ │    │    ├── OwnerPage.tsx            [Hostel owner listing & management portal]
+ │    │    ├── ProfilePage.tsx          [Student user account & settings]
+ │    │    ├── RoleSelectPage.tsx       [Student vs. Host landing selector]
+ │    │    ├── StudentPage.tsx          [Main Marketplace Explore Feed & Filters]
+ │    │    ├── TripsPage.tsx            [Student booked stays & itineraries]
+ │    │    ├── WishlistsPage.tsx        [Saved hostels collection]
+ │    │    └── ui/                  [shadcn/ui base primitives]
+ │    ├── context/            [AuthContext & HostelContext providers]
+ │    ├── data/               [Mock hostel marketplace listings & fallback data]
+ │    ├── pages/              [Main Index.tsx router & state orchestrator]
+ │    └── types/              [Hostel, Booking, & User TypeScript types]
+ ├── supabase/                [Database migrations & Supabase configuration]
  ├── package.json
  ├── tailwind.config.ts
- ├── vite.config.ts
  └── README.md
 ```
 
@@ -173,26 +174,16 @@ HostelMate/
 
 ## 🔮 8. Future Scope & Roadmap
 
-- [ ] **IoT Smart Meter Integration:** Automatic meter reading sync for individual room electricity tracking.
-- [ ] **Automated UPI Payment Gateway:** Integrated rent and utility bill payment flows with instant digital receipts.
-- [ ] **Voice-Assisted Complaint Filing:** Speech-to-Text integration for quick maintenance reporting.
-- [ ] **Multi-Property Owner Chain Dashboard:** Centralized management for owners operating multiple hostels across locations.
-- [ ] **Gate Pass & Visitor Management:** Digital QR-code based entry/exit approval for hostellers.
+- [ ] **College Proximity Distance Matrix:** Instant distance & commute time calculation to nearby universities and coaching centers.
+- [ ] **Virtual 360° Room Tours:** Immersive room previews to inspect bed space, study desks, and washrooms remotely.
+- [ ] **Roommate Matching Engine:** AI-assisted roommate preference matching based on sleep schedules and study habits.
+- [ ] **Online Rent & Token Deposit Payments:** Integrated UPI/card payment gateway for securing bookings instantly.
+- [ ] **Verified Student Badging:** Student ID verification for hostellers to ensure safety and trust across listings.
 
 ---
 
-## 👥 9. Team Responsibilities
 
-| Role | Responsibility | Member |
-|---|---|---|
-| **Product & Full-Stack Lead** | Core application architecture, Supabase integration, & UI design | [Your Name] |
-| **Frontend & UI Lead** | React components, Radix UI layout, & responsive styling | [Team Member] |
-| **AI & Workflow Lead** | Local AI Agent Control Plane & deterministic skill state machine | [Team Member] |
-| **Database & Security Lead** | Supabase schemas, RLS policies, & authentication flows | [Team Member] |
-
----
-
-## 🚀 10. Installation & Local Setup
+## 🚀 9. Installation & Local Setup
 
 ### Prerequisites
 - Node.js (v18.0.0 or higher)
@@ -224,7 +215,7 @@ HostelMate/
    ```
    Open `http://localhost:5173` in your browser.
 
-5. **Run Tests & Linting:**
+5. **Run Tests & Validation:**
    ```bash
    npm run test
    npm run lint
@@ -232,21 +223,11 @@ HostelMate/
 
 ---
 
-## 📸 11. Screen Previews
 
-- **Student Dashboard:** `[Replace with capture of Student Dashboard]`
-- **Hostel Discovery Map:** `[Replace with capture of Leaflet Map View]`
-- **Owner Command Center:** `[Replace with capture of Owner Dashboard]`
-- **Mess Rating Widget:** `[Replace with capture of Mess Rating Interface]`
-- **AI Digital Assistant:** `[Replace with capture of Agent Control Plane]`
+## 🏆 10. Vision
+
+> *HostelMate is building the future of student housing relocation. By bringing Airbnb-like transparency, interactive map discovery, and direct owner connections to hostels and PGs, we make moving to a new city safe, effortless, and empowering for every student.*
 
 ---
 
-## 🏆 12. Vision
-
-> *HostelMate turns chaotic accommodation management into a seamless, modern experience. By placing student convenience and owner clarity on equal footing, we make hostel living feel like home.*
-
----
-
-*Built with ❤️ for student housing innovation.*
-
+*Built with ❤️ for student housing & relocation innovation.*
