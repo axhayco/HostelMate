@@ -88,14 +88,14 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 ### (a) Student Discovery & Booking Flow
 ```mermaid
 flowchart TD
-    Student Arrival[Student Moves to New City] --> Search[Search City / Campus on HostelMate]
-    Search --> MapFilter[Filter by Price, Amenities, & Proximity on Leaflet Map]
-    MapFilter --> Inspect[View Hostel Details, Photos, & Mess Ratings]
-    Inspect --> Wishlist{Save to Wishlist?}
-    Wishlist -->|Yes| WishlistPage[Wishlist Collection]
-    Wishlist -->|Book Now| BookTrip[Create Booking Entry in Trips]
-    BookTrip --> OwnerSync[Sync Booking to Owner Dashboard]
-    OwnerSync --> Confirmed[Stay Confirmed & Access Community Chat]
+    StudentArrival["Student Moves to New City"] --> Search["Search City / Campus on HostelMate"]
+    Search --> MapFilter["Filter by Price, Amenities & Proximity on Leaflet Map"]
+    MapFilter --> Inspect["View Hostel Details, Photos & Mess Ratings"]
+    Inspect --> Wishlist{"Save to Wishlist?"}
+    Wishlist -->|Yes| WishlistPage["Wishlist Collection"]
+    Wishlist -->|Book Now| BookTrip["Create Booking Entry in Trips"]
+    BookTrip --> OwnerSync["Sync Booking to Owner Dashboard"]
+    OwnerSync --> Confirmed["Stay Confirmed & Access Community Chat"]
 ```
 
 ### (b) Marketplace Data Isolation Architecture
@@ -113,9 +113,9 @@ flowchart TD
 ### (c) Local AI Relocation Concierge
 ```mermaid
 flowchart LR
-    Query[Student Query: "Find AC hostels under ₹8,000 near me"] --> IntentParser[Local Intent & Keyword Matching]
-    IntentParser --> FilterEngine[Filter Marketplace Data locally]
-    FilterEngine --> AssistantResponse[Instant Custom Recommendation Card]
+    Query["Student Query: Find AC hostels under ₹8,000 near me"] --> IntentParser["Local Intent & Keyword Matching"]
+    IntentParser --> FilterEngine["Filter Marketplace Data Locally"]
+    FilterEngine --> AssistantResponse["Instant Custom Recommendation Card"]
 ```
 
 ---
