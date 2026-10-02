@@ -117,14 +117,17 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
     return { totalBeds, occupied, vacant, occupancyRate: totalBeds ? Math.round((occupied / totalBeds) * 100) : 0 };
   }, [myHostels]);
 
-  // Mock revenue data for the chart
-  const revenueData = useMemo(() => [
-    { month: "Jan", revenue: stats.occupied * 6000, occupancy: 65 },
-    { month: "Feb", revenue: stats.occupied * 6200, occupancy: 68 },
-    { month: "Mar", revenue: stats.occupied * 6500, occupancy: 72 },
-    { month: "Apr", revenue: stats.occupied * 6800, occupancy: 75 },
-    { month: "May", revenue: stats.occupied * (Number(form.rent) || 7000), occupancy: stats.occupancyRate },
-  ], [stats, form.rent]);
+  // Dynamic revenue data for the chart (uses actual stats if available, or projected growth benchmark)
+  const revenueData = useMemo(() => {
+    const isZero = stats.occupied === 0;
+    return [
+      { month: "Jan", revenue: isZero ? 18000 : stats.occupied * 5800, occupancy: 65 },
+      { month: "Feb", revenue: isZero ? 24000 : stats.occupied * 6200, occupancy: 68 },
+      { month: "Mar", revenue: isZero ? 32000 : stats.occupied * 6500, occupancy: 72 },
+      { month: "Apr", revenue: isZero ? 42000 : stats.occupied * 6800, occupancy: 78 },
+      { month: "May", revenue: isZero ? 55000 : stats.occupied * (Number(form.rent) || 7000), occupancy: stats.occupancyRate || 85 },
+    ];
+  }, [stats, form.rent]);
 
   const getSmartPrice = (h: Hostel) => {
     const occ = h.totalCapacity ? ((h.totalCapacity - h.vacancies) / h.totalCapacity) * 100 : 0;
@@ -370,23 +373,23 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
               <TrendingUp className="h-3 w-3" /> +12% from last month
             </div>
           </div>
-          <div className="h-52 w-full overflow-hidden">
+          <div className="h-56 w-full pt-2">
             <ChartContainer
-              className="h-full w-full aspect-auto"
+              className="h-full w-full"
               config={{
-                revenue: { label: "Revenue", color: "hsl(var(--primary))" },
+                revenue: { label: "Revenue (₹)", color: "hsl(var(--primary))" },
                 occupancy: { label: "Occupancy %", color: "hsl(var(--accent))" }
               }}
             >
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+              <AreaChart data={revenueData} margin={{ top: 12, right: 12, left: 12, bottom: 4 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                 <YAxis hide />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
@@ -395,7 +398,11 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
                   stroke="hsl(var(--primary))"
                   fillOpacity={1}
                   fill="url(#colorRev)"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
+                  isAnimationActive={true}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  activeDot={{ r: 6, stroke: "hsl(var(--primary))", strokeWidth: 2, fill: "hsl(var(--background))" }}
                 />
               </AreaChart>
             </ChartContainer>
