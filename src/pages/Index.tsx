@@ -183,7 +183,9 @@ const Index = () => {
       let targetTab: Tab | null = e.state?.tab ?? null;
 
       if (!targetPage || targetPage === "splash") {
-        targetPage = "student";
+        // Stop backward navigation at the student/owner login clarifying page (role-select)
+        targetPage = "role-select";
+        window.history.pushState({ page: "role-select" }, "", "/?page=role-select");
       }
 
       setPage(targetPage);
@@ -234,13 +236,17 @@ const Index = () => {
 
     const urlState = getUrlState();
     if (!urlState.page) {
-      const target: Page = user && role === "owner" ? "owner" : "student";
+      const target: Page = user && role === "owner" ? "owner" : user ? "student" : "role-select";
+      // Seed history stack with role-select as root anchor if not already set
       if (!window.history.state || !window.history.state.page) {
-        window.history.replaceState(
-          { page: target, hostelId: null, tab: "explore" },
-          "",
-          target === "student" ? "/" : `/?page=${target}`
-        );
+        window.history.replaceState({ page: "role-select" }, "", "/?page=role-select");
+        if (target !== "role-select") {
+          window.history.pushState(
+            { page: target, hostelId: null, tab: "explore" },
+            "",
+            target === "student" ? "/" : `/?page=${target}`
+          );
+        }
       }
       setPage(target);
     }
@@ -382,7 +388,6 @@ const Index = () => {
           onSelect={(role) =>
             navigateTo(role === "student" ? "login-student" : "login-owner")
           }
-          onBrowseGuest={() => navigateTo("student")}
           onBack={handleBack}
         />
       );
@@ -425,7 +430,6 @@ const Index = () => {
           hostels={ownerHostels}
           onHostelsChange={handleOwnerHostelsChange}
           onBack={handleSignOut}
-          onNavigateStudent={() => navigateTo("student")}
           ownerId={user?.id ?? "unknown"}
         />
       );

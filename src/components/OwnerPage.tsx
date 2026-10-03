@@ -5,7 +5,7 @@ import {
   Plus, X, Pencil, Trash2, Users, BedDouble,
   Building2, Eye, Check, MapPin, Star, Wifi, WifiOff, ImagePlus, Loader2,
   TrendingUp, TrendingDown, IndianRupee, GraduationCap, Phone, Utensils,
-  Camera, BedSingle, ChevronDown, LogOut, Store
+  Camera, BedSingle, ChevronDown
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
@@ -40,7 +40,6 @@ interface OwnerPageProps {
   hostels: Hostel[];
   onHostelsChange: (hostels: Hostel[]) => void;
   onBack: () => void;
-  onNavigateStudent?: () => void;
   ownerId: string;
 }
 
@@ -79,7 +78,7 @@ const emptyForm: HostelForm = {
   amenities: [],
 };
 
-const OwnerPage = ({ hostels, onHostelsChange, onBack, onNavigateStudent, ownerId }: OwnerPageProps) => {
+const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps) => {
   const setHostels = (updated: Hostel[] | ((prev: Hostel[]) => Hostel[])) => {
     const next = typeof updated === "function" ? updated(hostels) : updated;
     onHostelsChange(next);
@@ -323,28 +322,7 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, onNavigateStudent, ownerI
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-primary" />
-            <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
-          </div>
-          <div className="flex items-center gap-2">
-            {onNavigateStudent && (
-              <button
-                onClick={onNavigateStudent}
-                className="flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-all hover:bg-secondary active:scale-95 shadow-sm"
-              >
-                <Store className="h-3.5 w-3.5 text-primary" />
-                <span>Marketplace</span>
-              </button>
-            )}
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1.5 rounded-xl border border-destructive/20 bg-destructive/10 px-3 py-1.5 text-xs font-semibold text-destructive transition-all hover:bg-destructive/20 active:scale-95 shadow-sm"
-            >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>Log out</span>
-            </button>
-          </div>
+          <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
         </div>
       </header>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Camera, User, Mail, Phone, MapPin, Save, Check, HelpCircle, PhoneCall, LogOut, LogIn, Building2 } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Check, HelpCircle, PhoneCall, LogOut, LogIn } from "lucide-react";
 import { DEFAULT_AVATAR_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -236,9 +236,6 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
 
         {/* Quick Links */}
         <div className="rounded-2xl bg-card shadow-card overflow-hidden">
-          <button onClick={() => onNavigate?.("owner")} className="flex w-full items-center gap-3 px-5 py-4 text-sm font-semibold text-primary transition-colors hover:bg-secondary border-b border-border">
-            <Building2 className="h-4 w-4" /> Owner Dashboard
-          </button>
           <button onClick={() => onNavigate?.("help")} className="flex w-full items-center gap-3 px-5 py-4 text-sm text-foreground transition-colors hover:bg-secondary border-b border-border">
             <HelpCircle className="h-4 w-4 text-muted-foreground" /> Help Center
           </button>

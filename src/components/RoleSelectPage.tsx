@@ -3,11 +3,10 @@ import { GraduationCap, Building2 } from "lucide-react";
 
 interface RoleSelectPageProps {
   onSelect: (role: "student" | "owner") => void;
-  onBrowseGuest?: () => void;
   onBack?: () => void;
 }
 
-const RoleSelectPage = ({ onSelect, onBrowseGuest, onBack }: RoleSelectPageProps) => {
+const RoleSelectPage = ({ onSelect, onBack }: RoleSelectPageProps) => {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pt-12">
       <div className="w-full max-w-sm animate-fade-up" style={{ animationFillMode: "both" }}>
@@ -43,15 +42,6 @@ const RoleSelectPage = ({ onSelect, onBrowseGuest, onBack }: RoleSelectPageProps
               <p className="text-xs text-muted-foreground">Manage your hostel listings & bookings</p>
             </div>
           </button>
-
-          {onBrowseGuest && (
-            <button
-              onClick={onBrowseGuest}
-              className="mt-2 flex w-full items-center justify-center rounded-xl border border-border bg-secondary/60 py-3 text-xs font-semibold text-foreground transition-all hover:bg-secondary"
-            >
-              Browse Marketplace as Guest
-            </button>
-          )}
         </div>
       </div>
     </div>
