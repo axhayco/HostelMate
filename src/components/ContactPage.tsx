@@ -52,7 +52,7 @@ const ContactPage = ({ onBack }: ContactPageProps) => {
           {[
             { icon: <Phone className="h-5 w-5" />, label: "Call Us", value: "+91 80 1234 5678", href: "tel:+918012345678" },
             { icon: <Mail className="h-5 w-5" />, label: "Email", value: "support@hozztl.com", href: "mailto:support@hozztl.com" },
-            { icon: <MapPin className="h-5 w-5" />, label: "Office", value: "Koramangala, Bangalore 560034", href: "#" },
+            { icon: <MapPin className="h-5 w-5" />, label: "Office", value: "Shamshabad, Hyderabad 501218", href: "#" },
             { icon: <Clock className="h-5 w-5" />, label: "Hours", value: "Mon–Sat, 9 AM – 7 PM IST", href: "#" },
           ].map((item) => (
             <a
