@@ -200,6 +200,24 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
   const metaRole = user?.user_metadata?.role;
   const isOwner = role === "owner" || metaRole === "owner" || (user?.email?.toLowerCase().includes("owner") ?? false);
 
+  const requiredFields = isOwner
+    ? [
+        { key: "name", label: "Full Name", value: profile.name },
+        { key: "phone", label: "Phone Number", value: profile.phone },
+        { key: "businessName", label: "Business Name", value: profile.businessName },
+        { key: "businessAddress", label: "Office Address", value: profile.businessAddress },
+      ]
+    : [
+        { key: "name", label: "Full Name", value: profile.name },
+        { key: "phone", label: "Phone Number", value: profile.phone },
+        { key: "college", label: "College / University", value: profile.college },
+        { key: "branchYear", label: "Branch / Year", value: profile.branchYear },
+      ];
+
+  const completedFields = requiredFields.filter((f) => Boolean(f.value?.trim()));
+  const missingFields = requiredFields.filter((f) => !f.value?.trim());
+  const isProfileComplete = missingFields.length === 0;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="mx-auto max-w-5xl px-4 pt-6 flex items-center justify-between">
@@ -244,15 +262,43 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
           <p className="mt-3 text-lg font-bold text-foreground">
             {loading ? "Loading…" : profile.name || (isOwner ? "Hostel Owner" : "Student User")}
           </p>
-          <div className="mt-1 flex items-center gap-2">
+          <div className="mt-1 flex items-center gap-2 flex-wrap justify-center">
             <span className="text-xs text-muted-foreground">{user?.email}</span>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold ${
-              isOwner ? "bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20" : "bg-primary/10 text-primary border border-primary/20"
-            }`}>
-              {isOwner ? <Building2 className="h-3.5 w-3.5" /> : <GraduationCap className="h-3.5 w-3.5" />}
-              {isOwner ? "Verified Property Owner" : "Verified Student"}
-            </span>
+            {isProfileComplete ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-sm">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
+                {isOwner ? "Verified Property Owner" : "Verified Student"}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                {isOwner ? "Owner (Unverified)" : "Student (Unverified)"}
+              </span>
+            )}
           </div>
+
+          {/* Profile Completion Callout (Only shown when profile is incomplete) */}
+          {!isProfileComplete && !loading && (
+            <div className="mt-4 w-full rounded-xl bg-amber-500/10 border border-amber-500/20 p-3.5 text-left">
+              <div className="flex items-center justify-between text-xs font-bold text-amber-800 dark:text-amber-300 mb-1">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-amber-500" />
+                  Complete Profile for Verified Badge
+                </span>
+                <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                  {completedFields.length}/{requiredFields.length} Completed
+                </span>
+              </div>
+              <p className="text-[11.5px] text-amber-700/80 dark:text-amber-300/80 mb-2">
+                Fill in <span className="font-semibold">{missingFields.map((f) => f.label).join(", ")}</span> to unlock your verified badge.
+              </p>
+              <div className="w-full bg-amber-500/20 h-1.5 rounded-full overflow-hidden">
+                <div
+                  className="bg-amber-500 h-full transition-all duration-500 rounded-full"
+                  style={{ width: `${(completedFields.length / requiredFields.length) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Form Sections */}
