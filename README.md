@@ -1,4 +1,4 @@
-# 🏠 HOSTELMATE — Airbnb for Hostels & PGs
+# 🏠 HOZZTL — Airbnb for Hostels & PGs
 
 > **Student-first marketplace & discovery platform for finding, comparing, and booking verified hostels and PGs in new cities.**
 
@@ -14,7 +14,7 @@
 
 > [!IMPORTANT]
 > **READ THIS FIRST — CRITICAL PRODUCT VISION & GUARDRAILS**
-> - **The Model for Hostels:** HostelMate is a two-sided marketplace connecting relocating students directly with verified hostel and PG owners.
+> - **The Model for Hostels:** Hozztl is a two-sided marketplace connecting relocating students directly with verified hostel and PG owners.
 > - **Zero-Broker Friction:** Removes middlemen, hidden broker commissions, and misleading physical visits by providing transparent pricing, verified amenity tags, and accurate location mapping.
 > - **End-to-End Housing Lifecycle:** Extends beyond initial search — supporting students post-booking with community resident chat, daily mess ratings, maintenance requests, and digital leave logs.
 > - **Privacy-First AI Concierge:** Built-in client-side assistant that helps students calculate budgets, check vacancy, and find suitable accommodations with zero external API fees and zero latency.
@@ -31,7 +31,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 - Lack of transparent reviews regarding mess food quality and safety.
 - Distance mismatch between hostels and colleges/coaching institutes.
 
-**HostelMate** solves student relocation by bringing **seamless discovery, map search, instant booking, and transparent reviews** to the hostel and PG ecosystem.
+**Hozztl** solves student relocation by bringing **seamless discovery, map search, instant booking, and transparent reviews** to the hostel and PG ecosystem.
 
 > **The Relocation Thesis:** *Finding a home in a new city shouldn't feel like a gamble. We turn room hunting into a 5-minute visual exploration and connect students directly to verified property owners.*
 
@@ -39,7 +39,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 
 ## ❗ 2. The Problem Statement
 
-| Relocation Friction | Current Reality | The HostelMate Marketplace Solution |
+| Relocation Friction | Current Reality | The Hozztl Marketplace Solution |
 |---|---|---|
 | **Hostel Discovery** | Relying on local brokers & physical door-to-door visits | Interactive Leaflet map & location-based search near colleges |
 | **Trust & Transparency** | Fake photos & undisclosed extra charges | Verified photo galleries, transparent pricing, & amenity badges |
@@ -52,7 +52,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 ## 💡 3. Five Contrarian Product Choices
 
 1. **Clean Discovery Engine for Student Housing:** Designed specifically for student priorities — filtering by proximity to institutions, gender categories (Boys/Girls/Co-ed), AC/Non-AC, food inclusion, and Wi-Fi speed.
-2. **Beyond Search: Post-Booking Living Suite:** Unlike standard room-listing directories that disappear after booking, HostelMate transitions into the resident's daily portal for mess menu tracking, complaint filing, and community updates.
+2. **Beyond Search: Post-Booking Living Suite:** Unlike standard room-listing directories that disappear after booking, Hozztl transitions into the resident's daily portal for mess menu tracking, complaint filing, and community updates.
 3. **Multi-Owner Marketplace Isolation:** Independent property owners can list their hostels, manage room inventories, and track revenues without cross-owner data exposure.
 4. **Local Zero-Latency AI Search Concierge:** An embedded client-side agent (`AgentControlPlane`) that assists students in narrowing down hostels by budget, room preference, and location without expensive cloud AI latency.
 5. **Verified Peer Community & Chat:** Resident-only internal chat rooms that foster community among students living in the same hostel without sharing personal contact numbers.
@@ -88,7 +88,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 ### (a) Student Discovery & Booking Flow
 ```mermaid
 flowchart TD
-    StudentArrival["Student Moves to New City"] --> Search["Search City / Campus on HostelMate"]
+    StudentArrival["Student Moves to New City"] --> Search["Search City / Campus on Hozztl"]
     Search --> MapFilter["Filter by Price, Amenities & Proximity on Leaflet Map"]
     MapFilter --> Inspect["View Hostel Details, Photos & Mess Ratings"]
     Inspect --> Wishlist{"Save to Wishlist?"}
@@ -226,7 +226,7 @@ HostelMate/
 
 ## 🏆 10. Vision
 
-> *HostelMate is building the future of student housing relocation. By bringing Airbnb-like transparency, interactive map discovery, and direct owner connections to hostels and PGs, we make moving to a new city safe, effortless, and empowering for every student.*
+> *Hozztl is building the future of student housing relocation. By bringing Airbnb-like transparency, interactive map discovery, and direct owner connections to hostels and PGs, we make moving to a new city safe, effortless, and empowering for every student.*
 
 ---
 

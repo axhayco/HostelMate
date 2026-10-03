@@ -1,7 +1,7 @@
 {
-  "name": "HostelMate - Find & Book Student Hostels",
-  "short_name": "HostelMate",
-  "description": "HostelMate helps students find affordable hostels nearby with verified ratings, rent details, and vacancies.",
+  "name": "Hozztl - Find & Book Student Hostels",
+  "short_name": "Hozztl",
+  "description": "Hozztl helps students find affordable hostels nearby with verified ratings, rent details, and vacancies.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

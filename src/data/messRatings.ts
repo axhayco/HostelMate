@@ -31,18 +31,20 @@ export const MEAL_EMOJI: Record<MealType, string> = {
 export const REACTION_EMOJIS = ["😍", "😊", "😐", "😕", "🤢"];
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
-const STORAGE_KEY = "hostelmate-mess-ratings";
+const PRIMARY_STORAGE_KEY = "hozztl-mess-ratings";
+const LEGACY_STORAGE_KEY = "hostelmate-mess-ratings";
 
 export function loadMessRatings(): MessRating[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const raw = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || "[]";
+    return JSON.parse(raw);
   } catch {
     return [];
   }
 }
 
 export function saveMessRatings(ratings: MessRating[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+  localStorage.setItem(PRIMARY_STORAGE_KEY, JSON.stringify(ratings));
 }
 
 export function getMessRatingsForHostel(hostelId: string): MessRating[] {

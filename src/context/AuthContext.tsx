@@ -86,7 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // ── Google OAuth ─────────────────────────────────────────────────────────
   const signInWithGoogle = useCallback(async (role: UserRole) => {
     // Store role in localStorage — survives the full-page OAuth redirect
-    localStorage.setItem("hostelmate-pending-role", role);
+    localStorage.setItem("hozztl-pending-role", role);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

@@ -24,11 +24,11 @@ import { AgentControlPlane } from "@/components/AgentControlPlane";
 // Owner hostels are stored separately, keyed by ownerId, so no owner ever
 // sees or touches another owner's data.
 function ownerKey(ownerId: string) {
-  return `hostelmate-owner-hostels-${ownerId}`;
+  return `hozztl-owner-hostels-${ownerId}`;
 }
 function loadOwnerHostels(ownerId: string): Hostel[] {
   try {
-    const raw = localStorage.getItem(ownerKey(ownerId));
+    const raw = localStorage.getItem(ownerKey(ownerId)) || localStorage.getItem(`hostelmate-owner-hostels-${ownerId}`);
     return raw ? (JSON.parse(raw) as Hostel[]) : [];
   } catch {
     return [];
@@ -65,8 +65,8 @@ const Index = () => {
     if (urlState.page) return urlState.page;
 
     // 1. If splash seen, avoid initializing to it
-    const splashSeen = sessionStorage.getItem("hostelmate-splash-seen") === "true";
-    const savedPage = sessionStorage.getItem("hostelmate-current-page") as Page;
+    const splashSeen = (sessionStorage.getItem("hozztl-splash-seen") || sessionStorage.getItem("hostelmate-splash-seen")) === "true";
+    const savedPage = (sessionStorage.getItem("hozztl-current-page") || sessionStorage.getItem("hostelmate-current-page")) as Page;
     if (splashSeen && savedPage) return savedPage;
     if (splashSeen) return "student"; // safety default
     return "splash";
@@ -106,7 +106,7 @@ const Index = () => {
     const allOwnerAdded: Hostel[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
-      if (k && k.startsWith("hostelmate-owner-hostels-")) {
+      if (k && (k.startsWith("hozztl-owner-hostels-") || k.startsWith("hostelmate-owner-hostels-"))) {
         try {
           const parsed = JSON.parse(localStorage.getItem(k) || "[]") as Hostel[];
           allOwnerAdded.push(...parsed);
@@ -120,15 +120,19 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState<Tab>(() => {
     const urlState = getUrlState();
     if (urlState.tab) return urlState.tab;
-    return (sessionStorage.getItem("hostelmate-current-tab") as Tab) || "explore";
+    return ((sessionStorage.getItem("hozztl-current-tab") || sessionStorage.getItem("hostelmate-current-tab")) as Tab) || "explore";
   });
   const [favorites, setFavorites] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("hostelmate-favorites") || "[]"); }
-    catch { return []; }
+    try {
+      const raw = localStorage.getItem("hozztl-favorites") || localStorage.getItem("hostelmate-favorites") || "[]";
+      return JSON.parse(raw);
+    } catch { return []; }
   });
   const [bookings, setBookings] = useState<Booking[]>(() => {
-    try { return JSON.parse(localStorage.getItem("hostelmate-bookings") || "[]"); }
-    catch { return []; }
+    try {
+      const raw = localStorage.getItem("hozztl-bookings") || localStorage.getItem("hostelmate-bookings") || "[]";
+      return JSON.parse(raw);
+    } catch { return []; }
   });
 
   // ── Browser History & URL Navigation Helper ──────────────────────────────
@@ -218,16 +222,16 @@ const Index = () => {
   // ── Sync Page & Tab to sessionStorage ─────────────────────────────────────
   useEffect(() => {
     if (page !== "splash") {
-      sessionStorage.setItem("hostelmate-current-page", page);
+      sessionStorage.setItem("hozztl-current-page", page);
     }
   }, [page]);
 
   useEffect(() => {
-    sessionStorage.setItem("hostelmate-current-tab", activeTab);
+    sessionStorage.setItem("hozztl-current-tab", activeTab);
   }, [activeTab]);
 
   useEffect(() => {
-    localStorage.setItem("hostelmate-bookings", JSON.stringify(bookings));
+    localStorage.setItem("hozztl-bookings", JSON.stringify(bookings));
   }, [bookings]);
 
   // ── After Supabase finishes loading, decide which page to show & seed history stack ───────────
@@ -260,13 +264,14 @@ const Index = () => {
 
     const urlRole = new URLSearchParams(window.location.search).get("role");
     const pendingRole =
-      localStorage.getItem("hostelmate-pending-role") || urlRole;
+      localStorage.getItem("hozztl-pending-role") || localStorage.getItem("hostelmate-pending-role") || urlRole;
 
     if (!pendingRole) return;
 
     (async () => {
       await supabase.auth.updateUser({ data: { role: pendingRole } });
       await supabase.auth.refreshSession();
+      localStorage.removeItem("hozztl-pending-role");
       localStorage.removeItem("hostelmate-pending-role");
       window.history.replaceState({}, "", "/");
       navigateTo(pendingRole === "owner" ? "owner" : "student", null, undefined, true);
@@ -281,7 +286,7 @@ const Index = () => {
   }, [page, selectedHostel]);
 
   const handleSplashFinish = useCallback(() => {
-    sessionStorage.setItem("hostelmate-splash-seen", "true");
+    sessionStorage.setItem("hozztl-splash-seen", "true");
     if (user && role) {
       navigateTo(role === "owner" ? "owner" : "student", null, undefined, true);
     } else {
@@ -309,7 +314,7 @@ const Index = () => {
   const toggleFavorite = useCallback((id: string) => {
     setFavorites((prev) => {
       const next = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
-      localStorage.setItem("hostelmate-favorites", JSON.stringify(next));
+      localStorage.setItem("hozztl-favorites", JSON.stringify(next));
       return next;
     });
   }, []);

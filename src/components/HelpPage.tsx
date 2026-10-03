@@ -27,7 +27,7 @@ const faqs = [
     category: "Safety",
     icon: <Shield className="h-4 w-4" />,
     items: [
-      { q: "Are the hostels verified?", a: "All hostels on HostelMate go through a verification process. Look for the verified badge on listings." },
+      { q: "Are the hostels verified?", a: "All hostels on Hozztl go through a verification process. Look for the verified badge on listings." },
       { q: "How do I report an issue?", a: "You can report issues through the Community Chat or contact our support team via the Contact page." },
     ],
   },

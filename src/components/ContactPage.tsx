@@ -51,7 +51,7 @@ const ContactPage = ({ onBack }: ContactPageProps) => {
         <div className="grid grid-cols-1 gap-3">
           {[
             { icon: <Phone className="h-5 w-5" />, label: "Call Us", value: "+91 80 1234 5678", href: "tel:+918012345678" },
-            { icon: <Mail className="h-5 w-5" />, label: "Email", value: "support@hostelmate.in", href: "mailto:support@hostelmate.in" },
+            { icon: <Mail className="h-5 w-5" />, label: "Email", value: "support@hozztl.com", href: "mailto:support@hozztl.com" },
             { icon: <MapPin className="h-5 w-5" />, label: "Office", value: "Koramangala, Bangalore 560034", href: "#" },
             { icon: <Clock className="h-5 w-5" />, label: "Hours", value: "Mon–Sat, 9 AM – 7 PM IST", href: "#" },
           ].map((item) => (

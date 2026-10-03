@@ -323,7 +323,7 @@ function handleAgentQuery(
       const withMeals = allHostels.filter(h => h.amenities?.includes("Meals Included")).length;
       const minRent = allHostels.length ? Math.min(...allHostels.map(h => h.rent)) : 0;
       return {
-        reply: `We currently have ${count} hostels listed on HostelMate! 🏠\n• ${withMeals} include meals\n• Starting from ₹${minRent.toLocaleString()}/mo\n\nScroll through the listings and tap any card to explore details, amenities, and vacancies.`,
+        reply: `We currently have ${count} hostels listed on Hozztl! 🏠\n• ${withMeals} include meals\n• Starting from ₹${minRent.toLocaleString()}/mo\n\nScroll through the listings and tap any card to explore details, amenities, and vacancies.`,
         needsConfirm: false,
       };
     }
@@ -438,7 +438,7 @@ export const AgentControlPlane = ({ hasBottomNav }: { hasBottomNav?: boolean }) 
         const hasMeals = selectedHostel.amenities?.includes("Meals Included");
         greeting = `Hey! You're viewing ${selectedHostel.name} (${selectedHostel.location}). I can help with your electricity balance${hasMeals ? ", today's mess menu" : ""}, or submit a leave request.`;
       } else {
-        greeting = `Hey! I'm your HostelMate assistant. 👋\nBrowse the listings and tap a hostel to unlock resident features like electricity balance, mess menus, and leave requests. Or ask me to help you find the right place!`;
+        greeting = `Hey! I'm your Hozztl assistant. 👋\nBrowse the listings and tap a hostel to unlock resident features like electricity balance, mess menus, and leave requests. Or ask me to help you find the right place!`;
       }
       setMessages([{ id: "init", role: "assistant", content: greeting }]);
     }
@@ -524,7 +524,7 @@ export const AgentControlPlane = ({ hasBottomNav }: { hasBottomNav?: boolean }) 
         onClick={() => setIsOpen(true)}
         className={`fixed right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 ${isOpen ? "scale-0 opacity-0 pointer-events-none" : "scale-100 opacity-100"
           } ${hasBottomNav ? "bottom-24" : "bottom-6"}`}
-        aria-label="Open HostelMate Assistant"
+        aria-label="Open Hozztl Assistant"
       >
         <Sparkles className="absolute -top-1 -right-1 h-4 w-4 text-yellow-400 animate-pulse" />
         <Bot className="h-6 w-6" />
@@ -541,7 +541,7 @@ export const AgentControlPlane = ({ hasBottomNav }: { hasBottomNav?: boolean }) 
                 <Bot className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-bold leading-tight">HostelMate Assistant</p>
+                <p className="text-sm font-bold leading-tight">Hozztl Assistant</p>
                 <p className="flex items-center gap-1 text-[10px] opacity-80">
                   <span className="relative flex h-1.5 w-1.5">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75" />
@@ -639,7 +639,7 @@ export const AgentControlPlane = ({ hasBottomNav }: { hasBottomNav?: boolean }) 
               </button>
             </div>
             <p className="mt-1.5 text-center text-[9px] text-muted-foreground">
-              {selectedHostel ? `Assisting for ${selectedHostel.name}` : "HostelMate Digital Assistant"}
+              {selectedHostel ? `Assisting for ${selectedHostel.name}` : "Hozztl Digital Assistant"}
             </p>
           </div>
         </div>

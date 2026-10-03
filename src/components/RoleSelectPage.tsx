@@ -11,8 +11,8 @@ const RoleSelectPage = ({ onSelect, onBack }: RoleSelectPageProps) => {
     <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6 pt-12">
       <div className="w-full max-w-sm animate-fade-up" style={{ animationFillMode: "both" }}>
         <div className="mb-8 flex flex-col items-center">
-          <img src={logo} alt="HostelMate" className="mb-4 h-20 w-20" />
-          <h1 className="text-2xl font-bold text-foreground">Welcome to HostelMate</h1>
+          <img src={logo} alt="Hozztl" className="mb-4 h-20 w-20" />
+          <h1 className="text-2xl font-bold text-foreground">Welcome to Hozztl</h1>
           <p className="mt-1 text-sm text-muted-foreground">How would you like to continue?</p>
         </div>
 

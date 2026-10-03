@@ -55,18 +55,20 @@ export const STATUS_COLOR: Record<ComplaintStatus, string> = {
 };
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
-const STORAGE_KEY = "hostelmate-complaints";
+const PRIMARY_STORAGE_KEY = "hozztl-complaints";
+const LEGACY_STORAGE_KEY = "hostelmate-complaints";
 
 export function loadComplaints(): Complaint[] {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    const raw = localStorage.getItem(PRIMARY_STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY) || "[]";
+    return JSON.parse(raw);
   } catch {
     return [];
   }
 }
 
 export function saveComplaints(complaints: Complaint[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(complaints));
+  localStorage.setItem(PRIMARY_STORAGE_KEY, JSON.stringify(complaints));
 }
 
 export function getComplaintsForHostel(hostelId: string): Complaint[] {

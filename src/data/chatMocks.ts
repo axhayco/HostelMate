@@ -43,7 +43,7 @@ export const mockChatUsers: ChatUser[] = [
 ];
 
 export const mockPinnedMessages: ChatMessage[] = [
-  { id: "pin1", userId: "admin", text: "📶 WiFi: HostelMate_5G | Password: welcome2026", timestamp: "2026-03-15T10:00:00", reactions: {}, isPinned: true },
+  { id: "pin1", userId: "admin", text: "📶 WiFi: Hozztl_5G | Password: welcome2026", timestamp: "2026-03-15T10:00:00", reactions: {}, isPinned: true },
   { id: "pin2", userId: "admin", text: "🏠 House Rules: Quiet hours 11PM–7AM. No smoking indoors. Keep common areas clean!", timestamp: "2026-03-15T10:05:00", reactions: {}, isPinned: true },
 ];
 

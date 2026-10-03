@@ -186,7 +186,7 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
 
         {/* Logo + Title */}
         <div className="mb-8 flex flex-col items-center">
-          <img src={logo} alt="HostelMate" className="mb-4 h-20 w-20" />
+          <img src={logo} alt="Hozztl" className="mb-4 h-20 w-20" />
           <h1 className="text-2xl font-bold text-foreground">
             {role === "owner" ? "Owner Login" : "Student Login"}
           </h1>
