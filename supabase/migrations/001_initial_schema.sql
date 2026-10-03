@@ -248,18 +248,32 @@ BEGIN
     assigned_role := 'student'::public.user_role;
   END IF;
 
-  INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    assigned_role,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
-    NEW.raw_user_meta_data->>'avatar_url'
-  );
+  BEGIN
+    INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
+    VALUES (
+      NEW.id,
+      NEW.email,
+      assigned_role,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+      NEW.raw_user_meta_data->>'avatar_url'
+    )
+    ON CONFLICT (id) DO UPDATE SET
+      email = EXCLUDED.email,
+      full_name = COALESCE(EXCLUDED.full_name, public.profiles.full_name),
+      updated_at = now();
+  EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'handle_new_user profile insert warning: %', SQLERRM;
+  END;
+
+  RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+  RAISE WARNING 'handle_new_user trigger warning: %', SQLERRM;
   RETURN NEW;
 END;
 $$;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+

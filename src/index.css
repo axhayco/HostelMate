@@ -99,6 +99,52 @@
   animation: slide-down 0.3s ease-out forwards;
 }
 
+/* Motion Graphics Animations for Hero Traveler Character */
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(0.5deg); }
+}
+
+@keyframes sway-map {
+  0%, 100% { transform: rotate(-1.5deg) translateY(0px); }
+  50% { transform: rotate(1.5deg) translateY(-4px); }
+}
+
+@keyframes luggage-bounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.02); }
+}
+
+@keyframes aura-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.08); }
+}
+
+@keyframes beacon-ping {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+}
+
+.animate-sway-map {
+  animation: sway-map 3.5s ease-in-out infinite;
+}
+
+.animate-luggage-bounce {
+  animation: luggage-bounce 5s ease-in-out infinite;
+}
+
+.animate-aura-pulse {
+  animation: aura-pulse 6s ease-in-out infinite;
+}
+
+.animate-beacon-ping {
+  animation: beacon-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
