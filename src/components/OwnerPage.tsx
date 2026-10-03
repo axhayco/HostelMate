@@ -340,47 +340,64 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId, onOpenProfile }:
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-4 space-y-5">
-        {/* Stats Cards */}
+        {/* Stats Cards with Motion Graphics */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "My Hostels", value: myHostels.length, icon: <Building2 className="h-5 w-5" />, color: "text-primary" },
-            { label: "Total Beds", value: stats.totalBeds, icon: <BedDouble className="h-5 w-5" />, color: "text-accent-foreground" },
-            { label: "Occupied", value: stats.occupied, icon: <Users className="h-5 w-5" />, color: "text-success" },
-            { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, icon: <Eye className="h-5 w-5" />, color: "text-warning" },
+            { label: "My Hostels", value: myHostels.length, icon: <Building2 className="h-5 w-5" />, color: "text-primary bg-primary/10" },
+            { label: "Total Beds", value: stats.totalBeds, icon: <BedDouble className="h-5 w-5" />, color: "text-accent-foreground bg-accent" },
+            { label: "Occupied", value: stats.occupied, icon: <Users className="h-5 w-5" />, color: "text-success bg-success/10" },
+            { label: "Occupancy Rate", value: `${stats.occupancyRate}%`, icon: <Eye className="h-5 w-5" />, color: "text-warning bg-warning/10" },
           ].map((s) => (
-            <div key={s.label} className="rounded-2xl bg-card p-4 shadow-card">
-              <div className={`mb-2 ${s.color}`}>{s.icon}</div>
-              <div className="text-2xl font-bold text-foreground">{s.value}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{s.label}</div>
+            <div
+              key={s.label}
+              className="group relative overflow-hidden rounded-2xl bg-card p-4 shadow-card border border-border/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:border-primary/40"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${s.color} transition-transform group-hover:scale-110`}>
+                  {s.icon}
+                </div>
+                <span className="h-1.5 w-1.5 rounded-full bg-primary/40 group-hover:bg-primary group-hover:scale-150 transition-all" />
+              </div>
+              <div className="text-2xl font-extrabold text-foreground tracking-tight">{s.value}</div>
+              <div className="text-xs font-semibold text-muted-foreground mt-0.5">{s.label}</div>
             </div>
           ))}
         </div>
 
-        {/* Hardware Status Indicator */}
-        <div className={`rounded-2xl border p-4 flex items-center gap-4 ${hwOnline ? "border-success/30 bg-success/5" : "border-destructive/30 bg-destructive/5"}`}>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${hwOnline ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-            {hwOnline ? <Wifi className="h-5 w-5" /> : <WifiOff className="h-5 w-5" />}
+        {/* Hardware Status Indicator with Live Beacon Ping */}
+        <div className={`relative overflow-hidden rounded-2xl border p-4 flex items-center gap-4 transition-all duration-300 ${hwOnline ? "border-success/30 bg-success/5 shadow-sm" : "border-destructive/30 bg-destructive/5"}`}>
+          <div className={`relative flex h-11 w-11 items-center justify-center rounded-2xl ${hwOnline ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+            {hwOnline && (
+              <span className="absolute inset-0 rounded-2xl bg-success/20 animate-ping" style={{ animationDuration: "3s" }} />
+            )}
+            {hwOnline ? <Wifi className="h-5.5 w-5.5" /> : <WifiOff className="h-5.5 w-5.5" />}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">Occupancy Monitoring System</span>
-              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${hwOnline ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
-                <span className={`h-1.5 w-1.5 rounded-full ${hwOnline ? "bg-success animate-pulse" : "bg-destructive"}`} />
-                {hwOnline ? "Online" : "Offline"}
+              <span className="text-sm font-bold text-foreground">IoT Occupancy Sensors</span>
+              <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider ${hwOnline ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive"}`}>
+                <span className="relative flex h-2 w-2">
+                  <span className={`absolute inline-flex h-full w-full rounded-full ${hwOnline ? "bg-success animate-beacon-ping" : "bg-destructive"}`} />
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${hwOnline ? "bg-success" : "bg-destructive"}`} />
+                </span>
+                {hwOnline ? "Live Monitoring Active" : "Disconnected"}
               </span>
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Last ping: {lastPing.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              Real-time room telemetry pinged at {lastPing.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
             </p>
           </div>
         </div>
 
         {/* Revenue & Analytics Section */}
-        <section className="rounded-2xl bg-card p-5 shadow-card">
+        <section className="relative overflow-hidden rounded-2xl bg-card p-5 shadow-card border border-border/60">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-bold text-foreground">Revenue & Analytics</h2>
-            <div className="flex items-center gap-1 text-xs font-semibold text-success">
-              <TrendingUp className="h-3 w-3" /> +12% from last month
+            <div>
+              <h2 className="font-extrabold text-foreground text-base tracking-tight">Revenue & Occupancy Forecast</h2>
+              <p className="text-xs text-muted-foreground">Automated monthly tracking from confirmed bookings</p>
+            </div>
+            <div className="flex items-center gap-1 text-xs font-extrabold text-success bg-success/10 px-2.5 py-1 rounded-full animate-pulse-subtle">
+              <TrendingUp className="h-3.5 w-3.5" /> +12% vs last month
             </div>
           </div>
           <div className="h-52 w-full overflow-hidden">
@@ -394,12 +411,12 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId, onOpenProfile }:
               <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
                     <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 10 }} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 600 }} />
                 <YAxis hide />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <Area
@@ -408,38 +425,39 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId, onOpenProfile }:
                   stroke="hsl(var(--primary))"
                   fillOpacity={1}
                   fill="url(#colorRev)"
-                  strokeWidth={2}
+                  strokeWidth={3}
                 />
               </AreaChart>
             </ChartContainer>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border pt-4">
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t border-border/60 pt-4">
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Estimated Revenue</p>
-              <p className="text-lg font-bold text-foreground">₹{(stats.occupied * (Number(form.rent) || 7000)).toLocaleString()}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Estimated Monthly Revenue</p>
+              <p className="text-xl font-extrabold text-primary tracking-tight">₹{(stats.occupied * (Number(form.rent) || 7000)).toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Potential Revenue</p>
-              <p className="text-lg font-bold text-muted-foreground">₹{(stats.totalBeds * (Number(form.rent) || 7000)).toLocaleString()}</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Potential Maximum Revenue</p>
+              <p className="text-xl font-extrabold text-foreground tracking-tight">₹{(stats.totalBeds * (Number(form.rent) || 7000)).toLocaleString()}</p>
             </div>
           </div>
         </section>
 
         {/* ── MY HOSTELS SECTION ───────────────────────────────────────────── */}
         <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="font-bold text-foreground flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-primary" />
-              My Hostels
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+          <div className="mb-3.5 flex items-center justify-between">
+            <h2 className="font-extrabold text-foreground text-base tracking-tight flex items-center gap-2">
+              <Building2 className="h-4.5 w-4.5 text-primary animate-bounce" style={{ animationDuration: "3s" }} />
+              My Managed Hostels
+              <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
                 {myHostels.length}
               </span>
             </h2>
             <button
               onClick={openAdd}
-              className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
+              className="relative overflow-hidden flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-primary-foreground shadow-md transition-all duration-300 hover:opacity-95 hover:scale-105 active:scale-95"
             >
-              <Plus className="h-3.5 w-3.5" /> Add Hostel
+              <span className="absolute inset-0 w-1/2 h-full bg-white/20 -skew-x-12 animate-shimmer" />
+              <Plus className="h-4 w-4" /> Add New Hostel
             </button>
           </div>
 

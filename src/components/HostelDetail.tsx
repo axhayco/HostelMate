@@ -142,26 +142,33 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-4">
-        {/* ── Photo Gallery ───────────────────────────────────────── */}
-        <div className="mb-4">
-          <div className="aspect-[16/9] overflow-hidden rounded-2xl">
+      <main className="mx-auto max-w-5xl px-4 py-4 space-y-4">
+        {/* ── Photo Gallery with Dynamic Zoom ───────────────────────────────────────── */}
+        <div className="relative mb-4">
+          <div className="group relative aspect-[16/9] overflow-hidden rounded-2xl bg-muted shadow-card">
             <img
               src={hostel.photos?.[activePhoto] || hostel.image || DEFAULT_HOSTEL_IMAGE}
               alt={`${hostel.name} photo ${activePhoto + 1}`}
               onError={handleImageError}
-              className="h-full w-full object-cover transition-all duration-500"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/10" />
+
+            {/* Photo count indicator */}
+            <div className="absolute bottom-3 right-3 rounded-full bg-black/60 px-3 py-1 text-xs font-bold text-white backdrop-blur-md border border-white/20">
+              📷 {activePhoto + 1} / {(hostel.photos?.length || 1)}
+            </div>
           </div>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {/* Thumbnails */}
+          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-hide">
             {(hostel.photos?.length ? hostel.photos : [hostel.image || DEFAULT_HOSTEL_IMAGE]).map((photo, i) => (
               <button
                 key={i}
                 onClick={() => setActivePhoto(i)}
-                className={`flex-shrink-0 overflow-hidden rounded-xl transition-all duration-200 ${
+                className={`flex-shrink-0 overflow-hidden rounded-xl transition-all duration-300 ${
                   activePhoto === i
-                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                    : "opacity-60 hover:opacity-100"
+                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-105 shadow-md"
+                    : "opacity-60 hover:opacity-100 hover:scale-100"
                 }`}
               >
                 <img
@@ -175,71 +182,80 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
           </div>
         </div>
 
-        {/* ── Info ────────────────────────────────────────────────── */}
-        <div className="mb-4 rounded-2xl bg-card p-5 shadow-card">
+        {/* ── Info Card with Dynamic Motion Badges ────────────────────────────────── */}
+        <div className="rounded-2xl bg-card p-5 shadow-card border border-border/60">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-foreground">
+              <h2 className="text-2xl font-extrabold text-foreground tracking-tight">
                 {hostel.name}
               </h2>
-              <div className="mt-1 flex items-center gap-1 text-sm text-muted-foreground">
-                <MapPin className="h-3.5 w-3.5" />
-                {hostel.location}
+              <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground font-semibold">
+                <MapPin className="h-4 w-4 text-primary animate-bounce" style={{ animationDuration: "3s" }} />
+                <span>{hostel.location}</span>
               </div>
             </div>
-            <div className="flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-sm font-semibold">
-              <Star className="h-3.5 w-3.5 fill-warning text-warning" />
-              {avgRating}
+            <div className="flex items-center gap-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 text-sm font-extrabold text-amber-700 dark:text-amber-400">
+              <Star className="h-4 w-4 fill-amber-400 text-amber-400 animate-spin" style={{ animationDuration: "12s" }} />
+              <span>{avgRating}</span>
               {reviews.length > 0 && (
-                <span className="text-xs text-muted-foreground">
+                <span className="text-xs text-muted-foreground font-semibold">
                   ({reviews.length})
                 </span>
               )}
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
+          <div className="mt-4 flex items-center justify-between border-t border-border/60 pt-4">
             <div>
-              <span className="text-2xl font-bold text-primary">
+              <span className="text-3xl font-extrabold text-primary tracking-tight">
                 ₹{hostel.rent.toLocaleString()}
               </span>
-              <span className="text-sm text-muted-foreground">/month</span>
+              <span className="text-sm text-muted-foreground font-medium"> /month</span>
             </div>
-            <div className={`text-sm font-semibold ${vacancyColor}`}>
-              {hostel.vacancies === 0
-                ? "No Vacancies"
-                : `${hostel.vacancies} beds available`}
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className={`absolute inline-flex h-full w-full rounded-full ${hostel.vacancies > 0 ? "bg-emerald-500 animate-beacon-ping" : "bg-destructive"}`} />
+                <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${hostel.vacancies > 0 ? "bg-emerald-500" : "bg-destructive"}`} />
+              </span>
+              <span className={`text-sm font-extrabold ${vacancyColor}`}>
+                {hostel.vacancies === 0
+                  ? "Full Occupancy"
+                  : `${hostel.vacancies} beds open`}
+              </span>
             </div>
           </div>
-          <div className="mt-3">
-            <span className="inline-block rounded-full bg-secondary px-3 py-1 text-xs font-semibold capitalize text-secondary-foreground">
-              {hostel.gender === "male" ? "👦 Boys" : "👧 Girls"}
+          <div className="mt-3.5 flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold capitalize text-primary">
+              {hostel.gender === "male" ? "👦 Boys Hostel" : "👧 Girls Hostel"}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Verified Stay
             </span>
           </div>
         </div>
 
         {/* ── Description ─────────────────────────────────────────── */}
-        <div className="mb-4 rounded-2xl bg-card p-5 shadow-card">
-          <h3 className="mb-2 text-base font-bold text-foreground">About</h3>
+        <div className="rounded-2xl bg-card p-5 shadow-card border border-border/60">
+          <h3 className="mb-2 text-base font-extrabold text-foreground tracking-tight">About Property</h3>
           <p className="text-sm leading-relaxed text-muted-foreground">
             {hostel.description}
           </p>
         </div>
 
-        {/* ── Amenities ───────────────────────────────────────────── */}
-        <div className="mb-4 rounded-2xl bg-card p-5 shadow-card">
-          <h3 className="mb-3 text-base font-bold text-foreground">
-            Amenities
+        {/* ── Amenities with Interactive Motion Chips ───────────────────────────── */}
+        <div className="rounded-2xl bg-card p-5 shadow-card border border-border/60">
+          <h3 className="mb-3.5 text-base font-extrabold text-foreground tracking-tight">
+            Included Amenities
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {hostel.amenities.map((amenity) => (
               <div
                 key={amenity}
-                className="flex items-center gap-2.5 rounded-xl bg-secondary px-3.5 py-2.5 text-sm font-medium text-foreground"
+                className="group flex items-center gap-3 rounded-2xl bg-secondary/70 border border-border/40 px-4 py-3 text-xs font-bold text-foreground transition-all duration-300 hover:scale-105 hover:bg-card hover:border-primary/40 hover:shadow-sm"
               >
-                <span className="text-primary">
+                <span className="text-primary transition-transform group-hover:scale-125">
                   {amenityIcons[amenity] || <Sparkles className="h-4 w-4" />}
                 </span>
-                {amenity}
+                <span>{amenity}</span>
               </div>
             ))}
           </div>
