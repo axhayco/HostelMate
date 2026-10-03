@@ -49,8 +49,10 @@ export function toSafeAuthError(error: AuthErrorLike | null | undefined, kind: A
     // Diagnostics & Security Audit Logging
     logSecurityEvent(rateLimited ? "RATE_LIMIT_EXCEEDED" : "AUTH_LOGIN_FAILURE", { kind, code, status: error.status });
     console.error("[auth] request failed", { kind, code, status: error.status });
-    if (error.status === 500 || code === "unexpected_failure") {
-      console.error("[auth] HTTP 500 unexpected_failure: The database trigger (handle_new_user) on auth.users failed on your remote Supabase database. Please execute the handle_new_user SQL script in your Supabase SQL Editor.");
+
+    if (error.status && error.status >= 500) {
+        console.error("[auth] Server error (HTTP 5xx): handle_new_user database trigger or Supabase service error. Run migrations or check database logs.");
+        return { message: "Something went wrong on our end. Please try again.", code };
     }
 
     if (rateLimited) {
