@@ -436,6 +436,7 @@ const Index = () => {
           onHostelsChange={handleOwnerHostelsChange}
           onBack={handleSignOut}
           ownerId={user?.id ?? "unknown"}
+          onOpenProfile={() => navigateTo("profile")}
         />
       );
 

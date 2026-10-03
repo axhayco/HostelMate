@@ -5,7 +5,7 @@ import {
   Plus, X, Pencil, Trash2, Users, BedDouble,
   Building2, Eye, Check, MapPin, Star, Wifi, WifiOff, ImagePlus, Loader2,
   TrendingUp, TrendingDown, IndianRupee, GraduationCap, Phone, Utensils,
-  Camera, BedSingle, ChevronDown
+  Camera, BedSingle, ChevronDown, User
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
@@ -41,6 +41,7 @@ interface OwnerPageProps {
   onHostelsChange: (hostels: Hostel[]) => void;
   onBack: () => void;
   ownerId: string;
+  onOpenProfile?: () => void;
 }
 
 type ModalMode = "add" | "edit" | "occupancy" | null;
@@ -78,7 +79,7 @@ const emptyForm: HostelForm = {
   amenities: [],
 };
 
-const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps) => {
+const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId, onOpenProfile }: OwnerPageProps) => {
   const setHostels = (updated: Hostel[] | ((prev: Hostel[]) => Hostel[])) => {
     const next = typeof updated === "function" ? updated(hostels) : updated;
     onHostelsChange(next);
@@ -322,7 +323,19 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId }: OwnerPageProps
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border bg-card/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-          <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
+          </div>
+          {onOpenProfile && (
+            <button
+              onClick={onOpenProfile}
+              className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-all hover:bg-secondary active:scale-95"
+            >
+              <User className="h-4 w-4 text-primary" />
+              <span>My Profile</span>
+            </button>
+          )}
         </div>
       </header>
 

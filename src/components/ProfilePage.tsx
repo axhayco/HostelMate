@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Camera, User, Mail, Phone, MapPin, Save, Check, HelpCircle, PhoneCall, LogOut, LogIn } from "lucide-react";
+import { Camera, User, Mail, Phone, MapPin, Save, Check, HelpCircle, PhoneCall, LogOut, LogIn, Building2, ShieldCheck, ArrowRightLeft } from "lucide-react";
 import { DEFAULT_AVATAR_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +14,7 @@ interface ProfilePageProps {
 }
 
 const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProps) => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState({
@@ -47,7 +47,7 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
           name: data?.full_name || meta.full_name || meta.name || user.email?.split("@")[0] || "",
           email: data?.email || user.email || "",
           phone: data?.phone || meta.phone || "",
-          college: meta.college || "",
+          college: meta.college || meta.business_name || "",
           bio: meta.bio || "",
           avatar: data?.avatar_url || meta.avatar_url || "",
         });
@@ -57,7 +57,7 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
           name: meta.full_name || meta.name || user.email?.split("@")[0] || "",
           email: user.email || "",
           phone: meta.phone || "",
-          college: meta.college || "",
+          college: meta.college || meta.business_name || "",
           bio: meta.bio || "",
           avatar: meta.avatar_url || "",
         });
@@ -112,6 +112,7 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
             name: validData.name,
             phone: validData.phone,
             college: validData.college,
+            business_name: validData.college,
             bio: validData.bio,
           },
         });
@@ -162,12 +163,22 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="mx-auto max-w-5xl px-4 pt-6">
-        <h1 className="text-2xl font-bold text-foreground mb-1">Profile</h1>
-        <p className="text-sm text-muted-foreground mb-6">Manage your account</p>
+      <div className="mx-auto max-w-5xl px-4 pt-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground mb-1">Profile</h1>
+          <p className="text-sm text-muted-foreground">Manage your account</p>
+        </div>
+        {role === "owner" && (
+          <button
+            onClick={() => onNavigate?.("owner")}
+            className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
+          >
+            <Building2 className="h-4 w-4" /> Owner Dashboard
+          </button>
+        )}
       </div>
 
-      <main className="mx-auto max-w-lg px-4 space-y-5">
+      <main className="mx-auto max-w-lg px-4 mt-4 space-y-5">
         {/* Avatar */}
         <div className="flex flex-col items-center">
           <div className="relative">
@@ -190,7 +201,13 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
           <p className="mt-3 text-lg font-bold text-foreground">
             {loading ? "Loading…" : profile.name || "Your Account"}
           </p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">{user?.email}</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+              {role === "owner" ? <Building2 className="h-3 w-3" /> : <ShieldCheck className="h-3 w-3" />}
+              {role === "owner" ? "Hostel Owner" : "Student"}
+            </span>
+          </div>
         </div>
 
         {/* Form */}
@@ -215,9 +232,16 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
           </div>
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" /> College / Institution
+              {role === "owner" ? <Building2 className="h-3.5 w-3.5" /> : <MapPin className="h-3.5 w-3.5" />}
+              {role === "owner" ? "Business / Hostel Name" : "College / Institution"}
             </label>
-            <input type="text" value={profile.college} onChange={(e) => setProfile({ ...profile, college: e.target.value })} className={inputClass} placeholder="Your college" />
+            <input
+              type="text"
+              value={profile.college}
+              onChange={(e) => setProfile({ ...profile, college: e.target.value })}
+              className={inputClass}
+              placeholder={role === "owner" ? "Your hostel management name" : "Your college name"}
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-muted-foreground">Bio</label>
@@ -236,6 +260,14 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
 
         {/* Quick Links */}
         <div className="rounded-2xl bg-card shadow-card overflow-hidden">
+          {role === "owner" && (
+            <button onClick={() => onNavigate?.("owner")} className="flex w-full items-center gap-3 px-5 py-4 text-sm font-semibold text-primary transition-colors hover:bg-secondary border-b border-border">
+              <Building2 className="h-4 w-4 text-primary" /> Go to Owner Dashboard
+            </button>
+          )}
+          <button onClick={() => onNavigate?.("role-select")} className="flex w-full items-center gap-3 px-5 py-4 text-sm text-foreground transition-colors hover:bg-secondary border-b border-border">
+            <ArrowRightLeft className="h-4 w-4 text-muted-foreground" /> Switch Account Role (Student / Owner)
+          </button>
           <button onClick={() => onNavigate?.("help")} className="flex w-full items-center gap-3 px-5 py-4 text-sm text-foreground transition-colors hover:bg-secondary border-b border-border">
             <HelpCircle className="h-4 w-4 text-muted-foreground" /> Help Center
           </button>
