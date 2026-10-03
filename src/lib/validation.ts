@@ -19,15 +19,47 @@ const phoneField = z
     .string()
     .regex(/^(\+91[\s-]?)?[6-9]\d{9}$|^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$|^[6-9]\d{9}$/, "Invalid Indian mobile number (e.g. +91 9876543210)")
     .or(z.literal("")); // Allow empty for optional fields
-const passwordField = z.string().min(6, "Password must be at least 6 characters").max(128, "Password too long");
+
+// Password policy for NEW passwords (sign-up, reset, change). Length is the dominant factor;
+// the character-class rules block the most trivially guessable choices.
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 128;
+export const strongPasswordField = z
+    .string()
+    .min(PASSWORD_MIN_LENGTH, `Password must be at least ${PASSWORD_MIN_LENGTH} characters`)
+    .max(PASSWORD_MAX_LENGTH, "Password too long")
+    .regex(/[a-z]/, "Password must include a lowercase letter")
+    .regex(/[A-Z]/, "Password must include an uppercase letter")
+    .regex(/\d/, "Password must include a number");
+
+// Sign-in deliberately does NOT apply the strength policy: existing users may hold older, weaker
+// passwords and must still be able to authenticate (the server is the authority on correctness).
+const signInPasswordField = z.string().min(1, "Password is required").max(PASSWORD_MAX_LENGTH, "Password too long");
 
 // ─── Form Schemas ───
 
-export const loginEmailSchema = z.object({
+export const signInSchema = z.object({
     email: emailField,
-    password: passwordField,
-    fullName: nameField.optional(), // Only required for signup
+    password: signInPasswordField,
 }).strip();
+
+export const signUpSchema = z.object({
+    email: emailField,
+    password: strongPasswordField,
+    fullName: nameField,
+}).strip();
+
+export const resetEmailSchema = z.object({
+    email: emailField,
+}).strip();
+
+export const newPasswordSchema = z.object({
+    password: strongPasswordField,
+    confirmPassword: z.string(),
+}).strip().refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+});
 
 export const loginPhoneSchema = z.object({
     phone: z.string().regex(/^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/, "Invalid Indian mobile number"),
@@ -64,7 +96,13 @@ export const profileSchema = z.object({
     email: emailField,
     phone: phoneField,
     college: z.string().max(120, "College name cannot exceed 120 characters").optional().or(z.literal("")),
-    bio: z.string().max(150, "Bio cannot exceed 150 characters").optional().or(z.literal("")),
+    branchYear: z.string().max(100, "Branch/Year cannot exceed 100 characters").optional().or(z.literal("")),
+    hometown: z.string().max(100, "Hometown cannot exceed 100 characters").optional().or(z.literal("")),
+    emergencyPhone: phoneField.optional().or(z.literal("")),
+    businessName: z.string().max(120, "Business name cannot exceed 120 characters").optional().or(z.literal("")),
+    businessAddress: z.string().max(200, "Business address cannot exceed 200 characters").optional().or(z.literal("")),
+    operatingSince: z.string().max(50, "Operating experience cannot exceed 50 characters").optional().or(z.literal("")),
+    bio: z.string().max(250, "Bio cannot exceed 250 characters").optional().or(z.literal("")),
 }).strip();
 
 export const hostelFormSchema = z.object({

@@ -16,7 +16,7 @@ import TripsPage, { Booking } from "@/components/TripsPage";
 import MessagesPage from "@/components/MessagesPage";
 import { Hostel, mockHostels } from "@/data/hostels";
 import { useAuth } from "@/context/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import UpdatePasswordPage from "@/components/UpdatePasswordPage";
 import { HostelProvider } from "@/context/HostelContext";
 import { AgentControlPlane } from "@/components/AgentControlPlane";
 
@@ -58,7 +58,7 @@ function getUrlState() {
 }
 
 const Index = () => {
-  const { user, role, loading, signOut } = useAuth();
+  const { user, role, loading, signOut, claimRole, passwordRecovery } = useAuth();
 
   const [page, setPage] = useState<Page>(() => {
     const urlState = getUrlState();
@@ -122,18 +122,25 @@ const Index = () => {
     if (urlState.tab) return urlState.tab;
     return ((sessionStorage.getItem("hozztl-current-tab") || sessionStorage.getItem("hostelmate-current-tab")) as Tab) || "explore";
   });
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      const raw = localStorage.getItem("hozztl-favorites") || localStorage.getItem("hostelmate-favorites") || "[]";
-      return JSON.parse(raw);
-    } catch { return []; }
-  });
-  const [bookings, setBookings] = useState<Booking[]>(() => {
-    try {
-      const raw = localStorage.getItem("hozztl-bookings") || localStorage.getItem("hostelmate-bookings") || "[]";
-      return JSON.parse(raw);
-    } catch { return []; }
-  });
+  // Per-user favorites & bookings to prevent IDOR / cross-user data leakage
+  const [favorites, setFavorites] = useState<string[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      try {
+        const rawFav = localStorage.getItem(`hozztl-favorites-${user.id}`) || localStorage.getItem(`hostelmate-favorites-${user.id}`);
+        setFavorites(rawFav ? JSON.parse(rawFav) : []);
+      } catch { setFavorites([]); }
+      try {
+        const rawBk = localStorage.getItem(`hozztl-bookings-${user.id}`) || localStorage.getItem(`hostelmate-bookings-${user.id}`);
+        setBookings(rawBk ? JSON.parse(rawBk) : []);
+      } catch { setBookings([]); }
+    } else {
+      setFavorites([]);
+      setBookings([]);
+    }
+  }, [user?.id]);
 
   // ── Browser History & URL Navigation Helper ──────────────────────────────
   const navigateTo = useCallback(
@@ -231,8 +238,16 @@ const Index = () => {
   }, [activeTab]);
 
   useEffect(() => {
-    localStorage.setItem("hozztl-bookings", JSON.stringify(bookings));
-  }, [bookings]);
+    if (user?.id) {
+      localStorage.setItem(`hozztl-bookings-${user.id}`, JSON.stringify(bookings));
+    }
+  }, [user?.id, bookings]);
+
+  useEffect(() => {
+    if (user?.id) {
+      localStorage.setItem(`hozztl-favorites-${user.id}`, JSON.stringify(favorites));
+    }
+  }, [user?.id, favorites]);
 
   // ── After Supabase finishes loading, decide which page to show & seed history stack ───────────
   useEffect(() => {
@@ -256,27 +271,26 @@ const Index = () => {
     }
   }, [user, role, loading]);
 
-  // ── Handle Google OAuth redirect: set role if pending ────────────────────
+  // ── After OAuth / phone sign-up: apply the account type the user picked ───
+  // The server enforces this once-only (claim_role RPC), so a user cannot promote themselves later.
   useEffect(() => {
-    if (!user) return;
-
-    if (user.user_metadata?.role) return;
+    if (loading || !user) return;
 
     const urlRole = new URLSearchParams(window.location.search).get("role");
-    const pendingRole =
+    const pending =
       localStorage.getItem("hozztl-pending-role") || localStorage.getItem("hostelmate-pending-role") || urlRole;
 
-    if (!pendingRole) return;
+    if (pending !== "student" && pending !== "owner") return;
 
     (async () => {
-      await supabase.auth.updateUser({ data: { role: pendingRole } });
-      await supabase.auth.refreshSession();
+      const { error } = await claimRole(pending);
       localStorage.removeItem("hozztl-pending-role");
       localStorage.removeItem("hostelmate-pending-role");
       window.history.replaceState({}, "", "/");
-      navigateTo(pendingRole === "owner" ? "owner" : "student", null, undefined, true);
+      // If rejected, the account type was already fixed; role-based routing above takes over.
+      if (!error) navigateTo(pending === "owner" ? "owner" : "student", null, undefined, true);
     })();
-  }, [user, navigateTo]);
+  }, [user, loading, claimRole, navigateTo]);
 
   useEffect(() => {
     // Clear selected hostel when navigating away from detail or chat
@@ -312,11 +326,7 @@ const Index = () => {
   }, [signOut, navigateTo]);
 
   const toggleFavorite = useCallback((id: string) => {
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id];
-      localStorage.setItem("hozztl-favorites", JSON.stringify(next));
-      return next;
-    });
+    setFavorites((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
   }, []);
 
   const handleBookHostel = useCallback((hostel: Hostel) => {
@@ -367,11 +377,14 @@ const Index = () => {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background">
         <div className="animate-logo-pop">
-          <img src={logo} alt="Hostel Mate" className="h-20 w-20 animate-pulse" />
+          <img src={logo} alt="Hozztl" className="h-20 w-20 animate-pulse" />
         </div>
       </div>
     );
   }
+
+  // Visitors arriving from a password-reset email must set a new password before anything else is reachable.
+  if (passwordRecovery) return <UpdatePasswordPage />;
 
   // ── Page switch ───────────────────────────────────────────────────────────
   const hostelContextValue = { hostels, selectedHostel };

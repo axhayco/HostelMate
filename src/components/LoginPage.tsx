@@ -9,8 +9,8 @@ import {
   AlertCircle, Hash, User,
 } from "lucide-react";
 import { useAuth, type UserRole } from "@/context/AuthContext";
-import { authLimiter, otpResendLimiter } from "@/lib/rateLimiter";
-import { loginEmailSchema, loginPhoneSchema, otpVerifySchema, validateField, sanitizeText } from "@/lib/validation";
+import { RateLimiter, authLimiter, otpResendLimiter, signInLimiter, signUpLimiter, passwordResetLimiter } from "@/lib/rateLimiter";
+import { signInSchema, signUpSchema, resetEmailSchema, loginPhoneSchema, otpVerifySchema, validateField, sanitizeText, PASSWORD_MIN_LENGTH } from "@/lib/validation";
 
 type AuthMode = "email" | "phone";
 type PhoneStep = "input" | "otp";
@@ -21,11 +21,10 @@ interface LoginPageProps {
   onBack?: () => void;
 }
 
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const phoneRegex = /^(\+91[\s-]?)?[6-9]\d{4}[\s-]?\d{5}$/;
+
 
 const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
-  const { signInWithEmail, signUpWithEmail, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, resetPassword } = useAuth();
+  const { signInWithEmail, signUpWithEmail, resendVerificationEmail, signInWithGoogle, sendPhoneOtp, verifyPhoneOtp, resetPassword } = useAuth();
 
   const [mode, setMode] = useState<AuthMode>("email");
   const [isSignUp, setIsSignUp] = useState(false);
@@ -44,44 +43,82 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Email awaiting verification (after sign-up, or a sign-in blocked by an unverified address).
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
   const clearMessages = () => { setError(null); setInfo(null); };
+
+  /** Returns true if allowed; otherwise surfaces the lockout message. Client-side friction only. */
+  const allowAttempt = (limiter: RateLimiter, key: string): boolean => {
+    const limit = limiter.tryConsume(key);
+    if (limit.allowed) return true;
+    setError(`Too many attempts. Please try again in ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
+    return false;
+  };
 
   const handleEmailSubmit = async () => {
     clearMessages();
 
-    // Rate Limiting
-    const limit = authLimiter.tryConsume("auth_email");
-    if (!limit.allowed) {
-      setError(`Too many attempts. Please try again in ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
+    const sanitizedEmail = sanitizeText(email).toLowerCase();
+
+    if (isSignUp) {
+      const parsed = validateField(signUpSchema, {
+        email: sanitizedEmail,
+        password,
+        fullName: sanitizeText(fullName),
+      });
+      if (!parsed.success) { setError(parsed.error); return; }
+
+      const limitKey = `signup:${parsed.data.email}`;
+      if (!allowAttempt(signUpLimiter, limitKey)) return;
+
+      setLoading(true);
+      const result = await signUpWithEmail(parsed.data.email, parsed.data.password, role, parsed.data.fullName);
+      setLoading(false);
+
+      if (result.error) { setError(result.error); return; }
+      if (result.needsEmailConfirmation) {
+        // Do NOT log the user in: there is no session until they click the emailed link.
+        setPendingVerificationEmail(parsed.data.email);
+        setIsSignUp(false);
+        setPassword("");
+        setInfo("Almost there! We sent a verification link to your email. Click it, then sign in.");
+        return;
+      }
+      signUpLimiter.reset(limitKey);
+      onLogin();
       return;
     }
 
-    // Validation & Sanitization
-    const sanitizedEmail = sanitizeText(email).toLowerCase();
-    const sanitizedName = isSignUp ? sanitizeText(fullName) : undefined;
+    const parsed = validateField(signInSchema, { email: sanitizedEmail, password });
+    if (!parsed.success) { setError(parsed.error); return; }
 
-    const validation = validateField(loginEmailSchema, {
-      email: sanitizedEmail,
-      password,
-      fullName: sanitizedName,
-    });
+    const limitKey = `signin:${parsed.data.email}`;
+    if (!allowAttempt(signInLimiter, limitKey)) return;
 
-    if ("success" in validation && "data" in validation && validation.success) {
-      setLoading(true);
-      if (isSignUp) {
-        const { error } = await signUpWithEmail(validation.data.email, validation.data.password, role, validation.data.fullName || "");
-        if (error) { setError(error); }
-        else { onLogin(); }
-      } else {
-        const { error } = await signInWithEmail(validation.data.email, validation.data.password);
-        if (error) { setError(error); }
-        else { onLogin(); }
-      }
-      setLoading(false);
-    } else if ("error" in validation) {
-      setError(validation.error as string);
+    setLoading(true);
+    const result = await signInWithEmail(parsed.data.email, parsed.data.password);
+    setLoading(false);
+
+    if (result.error) {
+      setError(result.error);
+      if (result.code === "email_not_confirmed") setPendingVerificationEmail(parsed.data.email);
+      return;
     }
+    signInLimiter.reset(limitKey);
+    onLogin();
+  };
+
+  const handleResendVerification = async () => {
+    if (!pendingVerificationEmail) return;
+    clearMessages();
+    if (!allowAttempt(otpResendLimiter, `verify_resend:${pendingVerificationEmail}`)) return;
+
+    setLoading(true);
+    const { error } = await resendVerificationEmail(pendingVerificationEmail);
+    setLoading(false);
+    if (error) setError(error);
+    else setInfo("Verification email sent. Check your inbox (and spam folder).");
   };
 
   // ── Google OAuth ───────────────────────────────────────────────────────
@@ -153,24 +190,18 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
   const handleForgotPassword = async () => {
     clearMessages();
 
-    const limit = authLimiter.tryConsume("auth_forgot_password");
-    if (!limit.allowed) {
-      setError(`Too many attempts. Please try again in ${Math.ceil(limit.retryAfterMs / 1000)}s.`);
-      return;
-    }
+    const parsed = validateField(resetEmailSchema, { email: sanitizeText(email).toLowerCase() });
+    if (!parsed.success) { setError("Enter your email address above first"); return; }
+    if (!allowAttempt(passwordResetLimiter, `reset:${parsed.data.email}`)) return;
 
-    const sanitizedEmail = sanitizeText(email).toLowerCase();
-    const validation = validateField(loginEmailSchema, { email: sanitizedEmail, password: "temp_password_bypass", fullName: "" }); // bypass pass check
+    setLoading(true);
+    const { error, code } = await resetPassword(parsed.data.email);
+    setLoading(false);
 
-    if (validation.success || ("error" in validation && (validation.error as string).includes("Password"))) {
-      setLoading(true);
-      const { error } = await resetPassword(sanitizedEmail);
-      if (error) { setError(error); }
-      else { setInfo("Password reset email sent — check your inbox."); }
-      setLoading(false);
-    } else {
-      setError("Enter your email address above first");
-    }
+    // Only surface server-side throttling; everything else gets the same response so this form
+    // cannot be used to discover which emails have accounts.
+    if (error && code?.startsWith("over_")) { setError(error); return; }
+    setInfo("If an account exists for that email, a password reset link is on its way. The link is time-limited.");
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -225,6 +256,16 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
               {info}
             </div>
           )}
+          {pendingVerificationEmail && (
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="w-full text-center text-xs font-semibold text-primary hover:underline disabled:opacity-50"
+            >
+              Resend verification email to {pendingVerificationEmail}
+            </button>
+          )}
 
           {/* ── EMAIL MODE ── */}
           {mode === "email" && (
@@ -262,6 +303,7 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
                     onChange={(e) => { setEmail(e.target.value); clearMessages(); }}
                     onKeyDown={handleKeyDown}
                     placeholder="you@example.com"
+                    autoComplete="email"
                     className="w-full rounded-xl border border-input bg-background py-3 pl-10 pr-4 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-ring/20"
                   />
                 </div>
@@ -279,7 +321,8 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
                     value={password}
                     onChange={(e) => { setPassword(e.target.value); clearMessages(); }}
                     onKeyDown={handleKeyDown}
-                    placeholder={isSignUp ? "Create a password (min 6 chars)" : "Enter password"}
+                    placeholder={isSignUp ? `Create a password (min ${PASSWORD_MIN_LENGTH} chars)` : "Enter password"}
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
                     className="w-full rounded-xl border border-input bg-background py-3 pl-10 pr-10 text-sm text-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-ring/20"
                   />
                   <button
@@ -291,6 +334,12 @@ const LoginPage = ({ onLogin, role, onBack }: LoginPageProps) => {
                   </button>
                 </div>
               </div>
+
+              {isSignUp && (
+                <p className="-mt-2 mb-4 text-xs text-muted-foreground">
+                  At least {PASSWORD_MIN_LENGTH} characters, with upper and lower case letters and a number.
+                </p>
+              )}
 
               {/* Forgot password */}
               {!isSignUp && (

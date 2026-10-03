@@ -4,6 +4,8 @@
  * Note: Real security requires server-side validation (which Supabase provides via its API).
  */
 
+import { logSecurityEvent } from "./securityLogger";
+
 interface LimitRecord {
     timestamps: number[];
     blockedUntil: number;
@@ -42,6 +44,7 @@ export class RateLimiter {
 
         // If currently blocked, reject
         if (now < record.blockedUntil) {
+            logSecurityEvent("RATE_LIMIT_EXCEEDED", { key, blockedUntil: record.blockedUntil });
             return { allowed: false, retryAfterMs: record.blockedUntil - now };
         }
 
@@ -52,6 +55,7 @@ export class RateLimiter {
         // If limit exceeded, apply block
         if (record.timestamps.length >= this.maxRequests) {
             record.blockedUntil = now + this.blockDurationMs;
+            logSecurityEvent("RATE_LIMIT_EXCEEDED", { key, maxRequests: this.maxRequests, windowMs: this.windowMs });
             return { allowed: false, retryAfterMs: this.blockDurationMs };
         }
 
@@ -72,6 +76,9 @@ export class RateLimiter {
 // These are singletons used across the app for global limits.
 
 export const authLimiter = new RateLimiter(5, 60 * 1000); // 5 attempts per min
+export const signInLimiter = new RateLimiter(5, 60 * 1000, 5 * 60 * 1000); // 5 sign-ins/min, then 5 min lockout
+export const signUpLimiter = new RateLimiter(3, 10 * 60 * 1000, 10 * 60 * 1000); // 3 sign-ups per 10 min
+export const passwordResetLimiter = new RateLimiter(3, 15 * 60 * 1000, 15 * 60 * 1000); // 3 reset emails per 15 min
 export const otpResendLimiter = new RateLimiter(3, 120 * 1000); // 3 resends per 2 mins
 export const formSubmitLimiter = new RateLimiter(3, 60 * 1000); // 3 submits per min
 export const chatLimiter = new RateLimiter(10, 10 * 1000); // 10 messages per 10s
