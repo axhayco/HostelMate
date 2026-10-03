@@ -10,6 +10,15 @@ ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS role text NOT NULL DEFAULT 'student',
   ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now();
 
+-- Handle legacy user_id column constraint if present on remote DB
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='profiles' AND column_name='user_id') THEN
+    ALTER TABLE public.profiles ALTER COLUMN user_id DROP NOT NULL;
+    UPDATE public.profiles SET user_id = id WHERE user_id IS NULL;
+  END IF;
+END $$;
+
 -- Migrate data from legacy column names if present (e.g. name -> full_name, profile_photo -> avatar_url)
 DO $$
 BEGIN
@@ -38,6 +47,7 @@ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
 AS $$
 DECLARE
   assigned_role text;
+  has_user_id boolean;
 BEGIN
   -- Strict allow-list: only 'owner' is permitted, fallback everything else to 'student'
   IF (NEW.raw_user_meta_data->>'role') = 'owner' THEN
@@ -46,15 +56,25 @@ BEGIN
     assigned_role := 'student';
   END IF;
 
-  INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
-  VALUES (
-    NEW.id,
-    COALESCE(NEW.email, ''),
-    assigned_role,
-    COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
-    NEW.raw_user_meta_data->>'avatar_url'
-  )
-  ON CONFLICT (id) DO NOTHING;
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema='public' AND table_name='profiles' AND column_name='user_id'
+  ) INTO has_user_id;
+
+  IF has_user_id THEN
+    EXECUTE 'INSERT INTO public.profiles (id, user_id, email, role, full_name, avatar_url) VALUES ($1, $1, $2, $3, $4, $5) ON CONFLICT (id) DO NOTHING'
+    USING NEW.id, COALESCE(NEW.email, ''), assigned_role, COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''), NEW.raw_user_meta_data->>'avatar_url';
+  ELSE
+    INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
+    VALUES (
+      NEW.id,
+      COALESCE(NEW.email, ''),
+      assigned_role,
+      COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.raw_user_meta_data->>'name', ''),
+      NEW.raw_user_meta_data->>'avatar_url'
+    )
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
 
   RETURN NEW;
 END;
@@ -87,14 +107,41 @@ CREATE TRIGGER tr_prevent_profile_role_update
   FOR EACH ROW EXECUTE FUNCTION public.prevent_profile_role_update();
 
 -- 4. Idempotent Backfill: Create missing profiles for orphan auth.users
-INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
-SELECT
-  u.id,
-  COALESCE(u.email, ''),
-  CASE WHEN (u.raw_user_meta_data->>'role') = 'owner' THEN 'owner' ELSE 'student' END,
-  COALESCE(u.raw_user_meta_data->>'full_name', u.raw_user_meta_data->>'name', ''),
-  u.raw_user_meta_data->>'avatar_url'
-FROM auth.users u
-LEFT JOIN public.profiles p ON p.id = u.id
-WHERE p.id IS NULL
-ON CONFLICT (id) DO NOTHING;
+DO $$
+DECLARE
+  has_user_id boolean;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_schema='public' AND table_name='profiles' AND column_name='user_id'
+  ) INTO has_user_id;
+
+  IF has_user_id THEN
+    EXECUTE '
+      INSERT INTO public.profiles (id, user_id, email, role, full_name, avatar_url)
+      SELECT
+        u.id,
+        u.id,
+        COALESCE(u.email, ''''),
+        CASE WHEN (u.raw_user_meta_data->>''role'') = ''owner'' THEN ''owner'' ELSE ''student'' END,
+        COALESCE(u.raw_user_meta_data->>''full_name'', u.raw_user_meta_data->>''name'', ''''),
+        u.raw_user_meta_data->>''avatar_url''
+      FROM auth.users u
+      LEFT JOIN public.profiles p ON p.id = u.id
+      WHERE p.id IS NULL
+      ON CONFLICT (id) DO NOTHING;
+    ';
+  ELSE
+    INSERT INTO public.profiles (id, email, role, full_name, avatar_url)
+    SELECT
+      u.id,
+      COALESCE(u.email, ''),
+      CASE WHEN (u.raw_user_meta_data->>'role') = 'owner' THEN 'owner' ELSE 'student' END,
+      COALESCE(u.raw_user_meta_data->>'full_name', u.raw_user_meta_data->>'name', ''),
+      u.raw_user_meta_data->>'avatar_url'
+    FROM auth.users u
+    LEFT JOIN public.profiles p ON p.id = u.id
+    WHERE p.id IS NULL
+    ON CONFLICT (id) DO NOTHING;
+  END IF;
+END $$;
