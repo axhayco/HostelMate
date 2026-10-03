@@ -149,5 +149,5 @@ CREATE TABLE public.maintenance_tickets (
 - [x] **Phase 1 (Completed)**: UI/UX Redesign, Security Hardening, Motion Graphics, Role Profiles, RLS Base.
 - [x] **Phase 2 (Completed)**: Resident Verification Gate & Verified Mess Reviews.
 - [x] **Phase 3 (Completed)**: 2-Tiered Community Chat (Public Lounge vs Resident Group).
-- [ ] **Phase 4 (Next Step)**: Escrow Token Booking System & Razorpay/UPI Integration.
-- [ ] **Phase 5**: Maintenance Ticket Portal & Smart Vacancy Forecasting.
+- [x] **Phase 4 (Completed)**: Bed-Level Sharing Selection & ₹1,000 Advance Token Slot Lock (Pre-gateway / Cash-on-Arrival Ready).
+- [ ] **Phase 5 (Next Step)**: Maintenance Ticket Portal & Smart Vacancy Forecasting.

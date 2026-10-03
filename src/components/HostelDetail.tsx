@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import ComplaintForm from "@/components/ComplaintForm";       // Feature #4
 import MessRatingWidget from "@/components/MessRatingWidget"; // Feature #5
+import { BookingModal } from "@/components/BookingModal";
+import { Booking } from "@/components/TripsPage";
 
 interface Review {
   id: string;
@@ -22,7 +24,7 @@ interface Review {
 interface HostelDetailProps {
   hostel: Hostel;
   onBack: () => void;
-  onBook?: () => void;
+  onBook?: (booking?: Booking, bed?: string, roomType?: string) => void;
   onOpenChat?: () => void;
 }
 
@@ -78,6 +80,7 @@ const StarRating = ({
 const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps) => {
   const { user } = useAuth();
   const [activePhoto, setActivePhoto] = useState(0);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   const storageKey = `reviews-${hostel.id}`;
 
   const residency = getResidencyStatus(user?.id, hostel.id);
@@ -407,14 +410,15 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
         {/* ── Feature #4 — Complaint & Maintenance Tracker ────────── */}
         <ComplaintForm hostelId={hostel.id} hostelName={hostel.name} />
 
-        {/* ── Booking Action ────────────────────────────────────────── */}
+        {/* ── Booking Action Modal Launch ──────────────────────────── */}
         <div className="mb-4">
           <button
-            onClick={onBook}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-bold text-primary-foreground shadow-lg transition-all hover:bg-primary/90 active:scale-[0.98]"
+            onClick={() => setShowBookingModal(true)}
+            className="relative overflow-hidden flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-base font-extrabold text-primary-foreground shadow-lg transition-all duration-300 hover:bg-primary/90 active:scale-[0.98]"
           >
+            <span className="absolute inset-0 w-1/2 h-full bg-white/20 -skew-x-12 animate-shimmer" />
             <Sparkles className="h-5 w-5" />
-            Reserve Now
+            Reserve Bed & Lock Advance Token
           </button>
         </div>
 
@@ -429,6 +433,16 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
           </a>
         </div>
       </main>
+
+      {/* Bed Reservation & Token Lock Modal */}
+      <BookingModal
+        hostel={hostel}
+        isOpen={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onConfirmBooking={(newBooking, bed, room) => {
+          onBook?.(newBooking, bed, room);
+        }}
+      />
     </div>
   );
 };

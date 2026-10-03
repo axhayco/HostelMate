@@ -329,8 +329,8 @@ const Index = () => {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
   }, []);
 
-  const handleBookHostel = useCallback((hostel: Hostel) => {
-    const newBooking: Booking = {
+  const handleBookHostel = useCallback((hostel: Hostel, customBooking?: Booking) => {
+    const newBooking: Booking = customBooking || {
       id: `bk-${Date.now()}`,
       hostelName: hostel.name,
       location: hostel.location,
@@ -458,7 +458,7 @@ const Index = () => {
         <HostelDetail
           hostel={selectedHostel}
           onBack={handleBack}
-          onBook={() => handleBookHostel(selectedHostel)}
+          onBook={(b) => handleBookHostel(selectedHostel, b)}
           onOpenChat={() => {
             if (!user) {
               navigateTo("role-select");
