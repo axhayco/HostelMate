@@ -19,10 +19,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (stored === "light" || stored === "dark") {
         return stored;
       }
-      // Check system preference
-      if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-        return "dark";
-      }
     } catch {
       // Fallback
     }
