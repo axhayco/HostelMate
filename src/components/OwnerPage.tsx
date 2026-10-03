@@ -16,6 +16,7 @@ import { uploadHostelImage } from "@/lib/upload";
 import { hostelFormSchema, validateField, sanitizeText } from "@/lib/validation";
 import { formSubmitLimiter } from "@/lib/rateLimiter";
 import hostel1 from "@/assets/hostel1.jpg";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const NEARBY_COLLEGES = [
   "JNTU Hyderabad",
@@ -327,15 +328,18 @@ const OwnerPage = ({ hostels, onHostelsChange, onBack, ownerId, onOpenProfile }:
             <Building2 className="h-6 w-6 text-primary" />
             <h1 className="text-xl font-bold text-foreground">Owner Dashboard</h1>
           </div>
-          {onOpenProfile && (
-            <button
-              onClick={onOpenProfile}
-              className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-all hover:bg-secondary active:scale-95"
-            >
-              <User className="h-4 w-4 text-primary" />
-              <span>My Profile</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {onOpenProfile && (
+              <button
+                onClick={onOpenProfile}
+                className="flex items-center gap-2 rounded-xl border border-input bg-background px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-all hover:bg-secondary active:scale-95"
+              >
+                <User className="h-4 w-4 text-primary" />
+                <span>My Profile</span>
+              </button>
+            )}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 

@@ -9,6 +9,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { profileSchema, validateField, sanitizeText } from "@/lib/validation";
 import { formSubmitLimiter } from "@/lib/rateLimiter";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface ProfilePageProps {
   isGuest?: boolean;
@@ -229,14 +230,17 @@ const ProfilePage = ({ isGuest, onBack, onNavigate, onSignOut }: ProfilePageProp
             {isOwner ? "Manage property host details and business contact" : "Manage your student account and room preferences"}
           </p>
         </div>
-        {isOwner && (
-          <button
-            onClick={() => onNavigate?.("owner")}
-            className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
-          >
-            <Building2 className="h-4 w-4" /> Owner Dashboard
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => onNavigate?.("owner")}
+              className="flex items-center gap-2 rounded-xl bg-primary px-3.5 py-2 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 active:scale-95"
+            >
+              <Building2 className="h-4 w-4" /> Owner Dashboard
+            </button>
+          )}
+          <ThemeToggle />
+        </div>
       </div>
 
       <main className="mx-auto max-w-lg px-4 mt-4 space-y-5">

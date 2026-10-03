@@ -4,6 +4,7 @@ import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { Search, Heart, ChevronDown, ChevronRight, Star, LayoutGrid, Map, MessageCircle, Zap } from "lucide-react";
 import HostelCard from "./HostelCard";
 import HostelMap from "./HostelMap";
+import ThemeToggle from "./ThemeToggle";
 
 interface StudentPageProps {
   hostels: Hostel[];
@@ -195,8 +196,8 @@ const StudentPage = ({ hostels: allHostels, onSelectHostel, favorites, onToggleF
       </div>
 
       {/* ── Search & Hero Filter Header ───────────────────────────────────────── */}
-      <div className="px-4 pb-3 pt-4">
-        <div className="relative group">
+      <div className="px-4 pb-3 pt-4 flex items-center gap-2.5">
+        <div className="relative group flex-1">
           <Search className="absolute left-4 top-1/2 h-4.5 w-4.5 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" />
           <input
             type="text"
@@ -206,6 +207,7 @@ const StudentPage = ({ hostels: allHostels, onSelectHostel, favorites, onToggleF
             className="w-full rounded-2xl border border-border bg-card/90 py-3.5 pl-11 pr-4 text-sm text-foreground shadow-card backdrop-blur-md outline-none transition-all duration-300 focus:border-primary focus:ring-4 focus:ring-primary/15 focus:shadow-card-hover"
           />
         </div>
+        <ThemeToggle />
       </div>
 
       {/* ── Category tabs with dynamic motion ─────────────────────────────────── */}

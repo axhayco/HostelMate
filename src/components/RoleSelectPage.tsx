@@ -1,6 +1,7 @@
 import logo from "@/assets/logo.png";
 import travelerImg from "@/assets/traveler.png";
 import { GraduationCap, Building2, MapPin, Sparkles, Compass, ShieldCheck, ArrowRight } from "lucide-react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface RoleSelectPageProps {
   onSelect: (role: "student" | "owner") => void;
@@ -10,6 +11,11 @@ interface RoleSelectPageProps {
 const RoleSelectPage = ({ onSelect }: RoleSelectPageProps) => {
   return (
     <div className="relative min-h-screen w-full bg-background overflow-hidden flex flex-col justify-center">
+      {/* Absolute Top Floating Theme Toggle */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle showLabel />
+      </div>
+
       {/* Background Decorative Ambient Gradient Blobs */}
       <div className="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-primary/10 blur-3xl" />
       <div className="pointer-events-none absolute top-1/2 -right-24 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
