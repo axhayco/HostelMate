@@ -24,11 +24,14 @@ export interface ChatChannel {
   name: string;
   icon: string;
   description: string;
+  isPrivate?: boolean;
 }
 
 export const CHAT_CHANNELS: ChatChannel[] = [
-  { id: "lounge", name: "Hostel Lounge", icon: "💬", description: "General chat for all guests" },
-  { id: "events", name: "Events", icon: "🎉", description: "Plan meetups & activities" },
+  { id: "public-lounge", name: "Public Area Lounge", icon: "🌐", description: "Open to all students in the area", isPrivate: false },
+  { id: "roommates", name: "Roommate Finder", icon: "🤝", description: "Connect with prospective flatmates", isPrivate: false },
+  { id: "resident-chat", name: "Resident-Only Chat", icon: "🔒", description: "Exclusive to checked-in residents", isPrivate: true },
+  { id: "warden-notices", name: "Warden Announcements", icon: "📢", description: "Official hostel notices & Wi-Fi", isPrivate: true },
 ];
 
 export const mockChatUsers: ChatUser[] = [
@@ -48,17 +51,22 @@ export const mockPinnedMessages: ChatMessage[] = [
 ];
 
 export const mockMessages: Record<string, ChatMessage[]> = {
-  lounge: [
-    { id: "m1", userId: "u1", text: "Hey everyone! Just checked in. This place is 🔥", timestamp: "2026-03-17T14:30:00", reactions: { "🔥": ["u2", "u4"], "👋": ["u3"] } },
-    { id: "m2", userId: "u4", text: "Welcome! The rooftop is amazing, check it out", timestamp: "2026-03-17T14:32:00", reactions: { "💯": ["u1"] } },
+  "public-lounge": [
+    { id: "m1", userId: "u1", text: "Hey Kukatpally students! Anyone studying for JNTU mid-terms?", timestamp: "2026-03-17T14:30:00", reactions: { "🔥": ["u2", "u4"], "👋": ["u3"] } },
+    { id: "m2", userId: "u4", text: "Yes! Looking for good quiet study cafes near the campus", timestamp: "2026-03-17T14:32:00", reactions: { "💯": ["u1"] } },
     { id: "m3", userId: "u2", text: "Anyone up for grabbing dinner around the corner?", timestamp: "2026-03-17T15:10:00", reactions: { "🙋": ["u1", "u3", "u4"], "😋": ["u6"] } },
-    { id: "m4", userId: "u6", text: "Count me in! I heard they have great biryani", timestamp: "2026-03-17T15:12:00", reactions: {} },
-    { id: "m5", userId: "u3", text: "Let's go at 7:30? Need to finish my workout first 💪", timestamp: "2026-03-17T15:15:00", reactions: { "👍": ["u2", "u6"] } },
   ],
-  events: [
-    { id: "e1", userId: "u2", text: "Who wants to do a sunrise trek this weekend? 🏔️", timestamp: "2026-03-17T11:00:00", reactions: { "🏔️": ["u1", "u5"], "❤️": ["u4"] } },
-    { id: "e2", userId: "u5", text: "I'm in! I can bring my bluetooth speaker for the hike", timestamp: "2026-03-17T11:20:00", reactions: { "🎵": ["u2"] } },
-    { id: "e3", userId: "u4", text: "Study group tonight in the common room? 📖", timestamp: "2026-03-17T13:00:00", reactions: { "📖": ["u6"], "💪": ["u1"] } },
+  "roommates": [
+    { id: "e1", userId: "u2", text: "Hi! Looking for 2-sharing room partner starting next month 🏠", timestamp: "2026-03-17T11:00:00", reactions: { "🏔️": ["u1", "u5"], "❤️": ["u4"] } },
+    { id: "e2", userId: "u5", text: "Interested! What's your budget range?", timestamp: "2026-03-17T11:20:00", reactions: { "🎵": ["u2"] } },
+  ],
+  "resident-chat": [
+    { id: "r1", userId: "u1", text: "Hey residents! Is the 3rd floor washing machine free right now?", timestamp: "2026-03-17T16:00:00", reactions: { "👍": ["u3"] } },
+    { id: "r2", userId: "u3", text: "Yeah, just finished my load! It's open now.", timestamp: "2026-03-17T16:05:00", reactions: { "🙌": ["u1"] } },
+  ],
+  "warden-notices": [
+    { id: "w1", userId: "admin", text: "📢 Notice: High-speed Wi-Fi upgraded to 300 Mbps across all floors. Password refreshed.", timestamp: "2026-03-15T10:00:00", reactions: { "🎉": ["u1", "u2", "u3"] } },
+    { id: "w2", userId: "admin", text: "🏠 Reminder: Gate closes at 10:30 PM. Please inform warden for late entry permissions.", timestamp: "2026-03-15T10:05:00", reactions: { "👍": ["u4", "u5"] } },
   ],
 };
 

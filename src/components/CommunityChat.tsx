@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Hash, Pin, Send, Smile, Flag, Ban, Shield, ChevronDown, ChevronUp, X, MessageCircle } from "lucide-react";
+import { Hash, Pin, Send, Smile, Flag, Ban, Shield, ChevronDown, ChevronUp, X, MessageCircle, ShieldAlert, ShieldCheck, Lock } from "lucide-react";
 import { Hostel } from "@/data/hostels";
 import { useAuth } from "@/context/AuthContext";
+import { getResidencyStatus, verifyStudentCheckIn, isMockHostel } from "@/lib/residency";
 import {
   ChatMessage, ChatUser, CHAT_CHANNELS,
   mockChatUsers, mockMessages, mockPinnedMessages, QUICK_EMOJIS,
@@ -165,6 +166,17 @@ const CommunityChat = ({ hostel, onBack }: CommunityChatProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Residency Gate Check
+  const residency = getResidencyStatus(authUser?.id, hostel.id);
+  const [isVerified, setIsVerified] = useState(residency.isVerified);
+
+  const handleSelfVerify = () => {
+    if (authUser?.id) {
+      verifyStudentCheckIn(authUser.id, hostel.id, "active_resident");
+      setIsVerified(true);
+    }
+  };
+
   // Filter users by hostel gender
   const hostelUsers = useMemo(() =>
     mockChatUsers.filter(u => u.gender === hostel.gender),
@@ -267,17 +279,34 @@ const CommunityChat = ({ hostel, onBack }: CommunityChatProps) => {
           </div>
         </div>
 
-        {/* Channel Switcher */}
+        {/* Channel Switcher with Access Badges */}
         {showChannels && (
-          <div className="border-t border-border bg-card px-4 py-2 space-y-1">
+          <div className="border-t border-border bg-card px-4 py-2 space-y-1 shadow-lg">
             {CHAT_CHANNELS.map((ch) => (
-              <button key={ch.id} onClick={() => { setActiveChannel(ch.id); setShowChannels(false); }}
-                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${activeChannel === ch.id ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-secondary"}`}>
-                <span>{ch.icon}</span>
-                <div className="text-left">
-                  <p className="font-medium">{ch.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{ch.description}</p>
+              <button
+                key={ch.id}
+                onClick={() => {
+                  setActiveChannel(ch.id);
+                  setShowChannels(false);
+                }}
+                className={`flex w-full items-center justify-between gap-2.5 rounded-xl px-3 py-2.5 text-sm transition-all ${
+                  activeChannel === ch.id
+                    ? "bg-primary/10 text-primary font-bold shadow-sm"
+                    : "text-foreground hover:bg-secondary"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span className="text-lg">{ch.icon}</span>
+                  <div className="text-left min-w-0">
+                    <p className="font-bold text-xs sm:text-sm truncate">{ch.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{ch.description}</p>
+                  </div>
                 </div>
+                <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider ${
+                  ch.isPrivate ? "bg-amber-500/15 text-amber-700 dark:text-amber-400" : "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                }`}>
+                  {ch.isPrivate ? "🔒 Resident Only" : "🌐 Public Lounge"}
+                </span>
               </button>
             ))}
           </div>
@@ -315,27 +344,62 @@ const CommunityChat = ({ hostel, onBack }: CommunityChatProps) => {
         )}
       </div>
 
-      {/* Input */}
-      <div className="border-t border-border bg-card px-4 py-3">
-        <div className="flex items-center gap-2">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            placeholder={`Message #${channel.name}...`}
-            className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20"
-          />
-          <button
-            onClick={handleSend}
-            disabled={!input.trim()}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
-          >
-            <Send className="h-4 w-4" />
-          </button>
+      {/* Input or Private Channel Gate Banner */}
+      {channel.isPrivate && !isVerified ? (
+        <div className="border-t border-border/80 bg-amber-500/10 p-4">
+          <div className="flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-1.5">
+                <Lock className="h-4 w-4" /> Resident-Only Channel Gated
+              </h4>
+              <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                #{channel.name} is exclusive to verified active residents of {hostel.name}.
+              </p>
+              {isMockHostel(hostel.id) ? (
+                authUser ? (
+                  <button
+                    onClick={handleSelfVerify}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-95"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Verify My Check-In (Demo Hostel)
+                  </button>
+                ) : (
+                  <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                    Sign in as a resident to join private channels.
+                  </p>
+                )
+              ) : (
+                <div className="mt-2.5 rounded-xl bg-amber-500/20 p-2.5 border border-amber-500/30 text-xs font-semibold text-amber-950 dark:text-amber-100">
+                  🔒 <strong>Owner Verification Required:</strong> For real properties, your check-in must be approved by the hostel owner or scanned via reception QR code.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="border-t border-border bg-card px-4 py-3">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              placeholder={`Message #${channel.name}...`}
+              className="flex-1 rounded-xl border border-input bg-background px-4 py-2.5 text-sm text-foreground outline-none transition-all placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-ring/20"
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-40 disabled:pointer-events-none"
+            >
+              <Send className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

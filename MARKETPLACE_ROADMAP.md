@@ -147,7 +147,7 @@ CREATE TABLE public.maintenance_tickets (
 ## 6. 🚀 Phase-by-Phase Rollout Plan
 
 - [x] **Phase 1 (Completed)**: UI/UX Redesign, Security Hardening, Motion Graphics, Role Profiles, RLS Base.
-- [ ] **Phase 2 (Next Step)**: Resident Verification Gate & Verified Mess Reviews.
-- [ ] **Phase 3**: 2-Tiered Community Chat (Public Lounge vs Resident Group).
-- [ ] **Phase 4**: Escrow Token Booking System & Razorpay/UPI Integration.
+- [x] **Phase 2 (Completed)**: Resident Verification Gate & Verified Mess Reviews.
+- [x] **Phase 3 (Completed)**: 2-Tiered Community Chat (Public Lounge vs Resident Group).
+- [ ] **Phase 4 (Next Step)**: Escrow Token Booking System & Razorpay/UPI Integration.
 - [ ] **Phase 5**: Maintenance Ticket Portal & Smart Vacancy Forecasting.
