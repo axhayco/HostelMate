@@ -2,7 +2,7 @@ import { Hostel } from "@/data/hostels";
 import { useState, useEffect, useMemo } from "react";
 import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
 import { useAuth } from "@/context/AuthContext";
-import { getResidencyStatus, verifyStudentCheckIn } from "@/lib/residency";
+import { getResidencyStatus, verifyStudentCheckIn, isMockHostel } from "@/lib/residency";
 import {
   Star, MapPin, Phone, Wifi, Wind, Utensils, Dumbbell,
   ShieldCheck, Car, Zap, Droplets, BookOpen, Home, Sparkles, Sun,
@@ -295,18 +295,24 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
                   <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                     Property reviews & ratings are restricted to verified residents of this hostel to maintain 100% authentic student feedback.
                   </p>
-                  {user ? (
-                    <button
-                      onClick={handleSelfVerify}
-                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-95"
-                    >
-                      <ShieldCheck className="h-4 w-4" />
-                      Verify My Check-In (Demo Access)
-                    </button>
+                  {isMockHostel(hostel.id) ? (
+                    user ? (
+                      <button
+                        onClick={handleSelfVerify}
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-95"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        Verify My Check-In (Demo Hostel)
+                      </button>
+                    ) : (
+                      <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                        Sign in as a resident to verify your check-in and post property reviews.
+                      </p>
+                    )
                   ) : (
-                    <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                      Sign in as a resident to verify your check-in and post property reviews.
-                    </p>
+                    <div className="mt-3 rounded-xl bg-amber-500/20 p-3 border border-amber-500/30 text-xs font-semibold text-amber-950 dark:text-amber-100">
+                      🔒 <strong>Official Owner Check-In Required:</strong> For real properties, your check-in must be approved by the hostel owner or scanned via reception QR code.
+                    </div>
                   )}
                 </div>
               </div>

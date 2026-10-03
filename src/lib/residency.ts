@@ -79,7 +79,16 @@ export const isVerifiedResident = (
 };
 
 /**
- * Simulates owner/digital QR check-in verification for a student.
+ * Determines whether a hostel is a mock/demo listing or a real property.
+ */
+export const isMockHostel = (hostelId: string): boolean => {
+  if (!hostelId) return false;
+  // Mock hostels use short IDs like b1..b10, g1..g10, or 'mock-' prefix
+  return /^(b|g)\d+$/i.test(hostelId) || hostelId.startsWith("mock-");
+};
+
+/**
+ * Simulates owner/digital QR check-in verification for a student (Demo access allowed on mock hostels only).
  */
 export const verifyStudentCheckIn = (
   userId: string,
