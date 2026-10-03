@@ -1,10 +1,12 @@
 import { Hostel } from "@/data/hostels";
 import { useState, useEffect, useMemo } from "react";
 import { DEFAULT_HOSTEL_IMAGE, handleImageError } from "@/lib/imageUtils";
+import { useAuth } from "@/context/AuthContext";
+import { getResidencyStatus, verifyStudentCheckIn } from "@/lib/residency";
 import {
   Star, MapPin, Phone, Wifi, Wind, Utensils, Dumbbell,
   ShieldCheck, Car, Zap, Droplets, BookOpen, Home, Sparkles, Sun,
-  Send, User, MessageCircle, Trash2,
+  Send, User, MessageCircle, Trash2, ShieldAlert,
 } from "lucide-react";
 import ComplaintForm from "@/components/ComplaintForm";       // Feature #4
 import MessRatingWidget from "@/components/MessRatingWidget"; // Feature #5
@@ -74,8 +76,19 @@ const StarRating = ({
 );
 
 const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps) => {
+  const { user } = useAuth();
   const [activePhoto, setActivePhoto] = useState(0);
   const storageKey = `reviews-${hostel.id}`;
+
+  const residency = getResidencyStatus(user?.id, hostel.id);
+  const [isVerified, setIsVerified] = useState(residency.isVerified);
+
+  const handleSelfVerify = () => {
+    if (user?.id) {
+      verifyStudentCheckIn(user.id, hostel.id, "active_resident");
+      setIsVerified(true);
+    }
+  };
 
   const [reviews, setReviews] = useState<Review[]>(() => {
     try {
@@ -85,7 +98,7 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
     }
   });
 
-  const [newName, setNewName]       = useState("");
+  const [newName, setNewName]       = useState(user?.user_metadata?.full_name || "");
   const [newRating, setNewRating]   = useState(0);
   const [newComment, setNewComment] = useState("");
 
@@ -270,36 +283,66 @@ const HostelDetail = ({ hostel, onBack, onBook, onOpenChat }: HostelDetailProps)
             Reviews & Ratings
           </h3>
 
-          <div className="mb-5 rounded-xl border border-border bg-secondary/50 p-4">
-            <p className="mb-3 text-sm font-semibold text-foreground">
-              Write a Review
-            </p>
-            <input
-              type="text"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              placeholder="Your name"
-              className="mb-3 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
-            />
-            <div className="mb-3 flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Rating:</span>
-              <StarRating rating={newRating} onRate={setNewRating} interactive />
+          {!isVerified ? (
+            /* ── Unverified Resident Gate Banner ── */
+            <div className="mb-5 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                    Verified Resident Gate Active
+                  </h4>
+                  <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    Property reviews & ratings are restricted to verified residents of this hostel to maintain 100% authentic student feedback.
+                  </p>
+                  {user ? (
+                    <button
+                      onClick={handleSelfVerify}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-95"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Verify My Check-In (Demo Access)
+                    </button>
+                  ) : (
+                    <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                      Sign in as a resident to verify your check-in and post property reviews.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
-            <textarea
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Share your experience..."
-              rows={3}
-              className="mb-3 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
-            />
-            <button
-              onClick={handleSubmitReview}
-              disabled={!newName.trim() || !newComment.trim() || newRating === 0}
-              className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-            >
-              <Send className="h-4 w-4" /> Submit Review
-            </button>
-          </div>
+          ) : (
+            <div className="mb-5 rounded-xl border border-border bg-secondary/50 p-4">
+              <p className="mb-3 text-sm font-semibold text-foreground">
+                Write a Review
+              </p>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Your name"
+                className="mb-3 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
+              />
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rating:</span>
+                <StarRating rating={newRating} onRate={setNewRating} interactive />
+              </div>
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Share your experience..."
+                rows={3}
+                className="mb-3 w-full resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/20"
+              />
+              <button
+                onClick={handleSubmitReview}
+                disabled={!newName.trim() || !newComment.trim() || newRating === 0}
+                className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground transition-all hover:bg-primary/90 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+              >
+                <Send className="h-4 w-4" /> Submit Review
+              </button>
+            </div>
+          )}
 
           {reviews.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">

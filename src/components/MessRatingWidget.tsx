@@ -12,7 +12,9 @@
 // Or always show it (remove the amenities check) if all hostels have mess.
 
 import { useState, useCallback } from "react";
-import { Send, ChevronDown, Utensils, TrendingUp } from "lucide-react";
+import { Send, ChevronDown, Utensils, TrendingUp, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { getResidencyStatus, verifyStudentCheckIn } from "@/lib/residency";
 import {
   type MealType,
   type MessRating,
@@ -55,11 +57,16 @@ const StarRow = ({
 );
 
 const MessRatingWidget = ({ hostelId, hostelName }: MessRatingWidgetProps) => {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [showTrend, setShowTrend] = useState(false);
 
+  // Verification Gate Check
+  const residency = getResidencyStatus(user?.id, hostelId);
+  const [isVerified, setIsVerified] = useState(residency.isVerified);
+
   // form state
-  const [studentName, setStudentName] = useState("");
+  const [studentName, setStudentName] = useState(user?.user_metadata?.full_name || "");
   const [selectedMeal, setSelectedMeal] = useState<MealType>("Lunch");
   const [rating, setRating] = useState(0);
   const [selectedEmoji, setSelectedEmoji] = useState("");
@@ -67,6 +74,13 @@ const MessRatingWidget = ({ hostelId, hostelName }: MessRatingWidgetProps) => {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alreadyRated, setAlreadyRated] = useState(false);
+
+  const handleSelfVerify = () => {
+    if (user?.id) {
+      verifyStudentCheckIn(user.id, hostelId, "active_resident");
+      setIsVerified(true);
+    }
+  };
 
   const overallAvg = getHostelAvgMessRating(hostelId);
   const trend = getLast7DaysScores(hostelId);
@@ -151,7 +165,35 @@ const MessRatingWidget = ({ hostelId, hostelName }: MessRatingWidgetProps) => {
 
       {open && (
         <div className="border-t border-border px-5 pb-5 pt-4">
-          {submitted ? (
+          {!isVerified ? (
+            /* ── Unverified Resident Gate Banner ── */
+            <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-left">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <div>
+                  <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200">
+                    Verified Resident Gate Active
+                  </h4>
+                  <p className="mt-1 text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
+                    Mess food ratings & reviews are restricted to verified active residents of this hostel to maintain 100% authentic feedback.
+                  </p>
+                  {user ? (
+                    <button
+                      onClick={handleSelfVerify}
+                      className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-amber-600 px-3.5 py-2 text-xs font-bold text-white shadow-md transition-all hover:bg-amber-700 active:scale-95"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Verify My Check-In (Demo Access)
+                    </button>
+                  ) : (
+                    <p className="mt-2 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                      Sign in as a resident to verify check-in and post mess reviews.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : submitted ? (
             /* ── Success state ── */
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <span className="text-5xl">🎉</span>
