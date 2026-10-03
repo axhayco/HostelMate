@@ -15,15 +15,15 @@ const RoleSelectPage = ({ onSelect }: RoleSelectPageProps) => {
       <div className="pointer-events-none absolute top-1/2 -right-24 h-96 w-96 rounded-full bg-orange-400/10 blur-3xl" />
 
       <div className="mx-auto flex w-full max-w-6xl flex-col-reverse lg:flex-row items-center justify-between px-6 py-8 lg:py-12 gap-10 lg:gap-16">
-        
+
         {/* LEFT COLUMN: Motion Graphics & Animated Traveler Character */}
         <div className="relative flex w-full lg:w-1/2 items-center justify-center">
           {/* Animated Background Aura Circle */}
           <div className="absolute h-[340px] w-[340px] sm:h-[420px] sm:w-[420px] rounded-full bg-gradient-to-tr from-primary/20 via-orange-400/15 to-amber-300/20 blur-2xl animate-aura-pulse" />
-          
+
           {/* Main Traveler Container with Floating & Motion Graphics */}
           <div className="relative z-10 flex flex-col items-center justify-center">
-            
+
             {/* Animated Location Beacon Badge */}
             <div className="absolute top-4 left-4 sm:-left-4 z-20 flex items-center gap-2 rounded-2xl border border-white/60 bg-card/90 py-2 px-3.5 shadow-xl backdrop-blur-md animate-float-gentle">
               <div className="relative flex h-3 w-3 items-center justify-center">
@@ -56,7 +56,7 @@ const RoleSelectPage = ({ onSelect }: RoleSelectPageProps) => {
                 <Sparkles className="h-6 w-6" />
               </div>
             </div>
-            
+
             {/* Decorative Ground Shadow */}
             <div className="mt-[-10px] h-4 w-48 rounded-[100%] bg-foreground/10 blur-sm animate-aura-pulse" />
           </div>
@@ -70,7 +70,7 @@ const RoleSelectPage = ({ onSelect }: RoleSelectPageProps) => {
             </div>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight">
               Find Your Perfect <br className="hidden sm:block" />
-              <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">Student Stay</span>
+              <span className="bg-gradient-to-r from-primary to-orange-500 bg-clip-text text-transparent">Stay</span>
             </h1>
             <p className="mt-2.5 text-sm text-muted-foreground leading-relaxed">
               Choose your role below to get started with verified hostels, rent rates, and room availability.
