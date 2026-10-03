@@ -1,4 +1,4 @@
-# 🏠 HOZZTL — Airbnb for Hostels & PGs
+# 🏠 HOZZTL — Find Your Perfect Stay
 
 > **Student-first marketplace & discovery platform for finding, comparing, and booking verified hostels and PGs in new cities.**
 
