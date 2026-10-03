@@ -37,7 +37,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 
 ---
 
-## ❗ 2. The Problem Statement
+## ❗ 2. The Problem 
 
 | Relocation Friction | Current Reality | The Hozztl Marketplace Solution |
 |---|---|---|
@@ -51,7 +51,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 
 ## 💡 3. Five Contrarian Product Choices
 
-1. **Clean Discovery Engine for Student Housing:** Designed specifically for student priorities — filtering by proximity to institutions, gender categories (Boys/Girls/Co-ed), AC/Non-AC, food inclusion, and Wi-Fi speed.
+1. **Clean Discovery Engine for Student Housing:** Designed specifically for student priorities — filtering by proximity to institutions, gender categories (Boys/Girls), AC/Non-AC, food inclusion, and Wi-Fi speed.
 2. **Beyond Search: Post-Booking Living Suite:** Unlike standard room-listing directories that disappear after booking, Hozztl transitions into the resident's daily portal for mess menu tracking, complaint filing, and community updates.
 3. **Multi-Owner Marketplace Isolation:** Independent property owners can list their hostels, manage room inventories, and track revenues without cross-owner data exposure.
 4. **Local Zero-Latency AI Search Concierge:** An embedded client-side agent (`AgentControlPlane`) that assists students in narrowing down hostels by budget, room preference, and location without expensive cloud AI latency.
@@ -64,7 +64,7 @@ However, finding suitable accommodation in an unfamiliar city is stressful, unor
 ### 🎒 Student Marketplace Surfaces
 | Surface Name | Primary Purpose |
 |---|---|
-| **Explore Hub** | Airbnb-style search bar, category pills (Luxury, Budget, Near Campus), and hostel cards |
+| **Explore Hub** | Clean search bar, category pills (Luxury, Budget, Near Campus), and hostel cards |
 | **Interactive Map View** | Leaflet-powered geospatial search showing hostel pins near educational hubs |
 | **Hostel Detail View** | Comprehensive page featuring high-res imagery, room tariffs, amenity badges, and map coordinates |
 | **Wishlists & Favorites** | Save and compare preferred hostels before making a final booking decision |
@@ -226,7 +226,7 @@ HostelMate/
 
 ## 🏆 10. Vision
 
-> *Hozztl is building the future of student housing relocation. By bringing Airbnb-like transparency, interactive map discovery, and direct owner connections to hostels and PGs, we make moving to a new city safe, effortless, and empowering for every student.*
+> *Hozztl is building the future of student housing relocation. By bringing the transparency, interactive map discovery, and direct owner connections to hostels and PGs, we make moving to a new city safe, effortless, and empowering for every student.*
 
 ---
 
